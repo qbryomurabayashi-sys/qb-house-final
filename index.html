@@ -1,0 +1,2554 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QB House Evaluation Sheet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@babel/standalone@7.23.8/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Custom styles for range slider and print */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            background: #ef4444;
+            cursor: pointer;
+            border-radius: 50%;
+            margin-top: -10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 8px;
+            background: #fee2e2;
+            border-radius: 4px;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Print Control Styles */
+        @media screen {
+
+            /* 画面上では印刷用コンテナを隠すが、DOMには残してグラフを描画させる */
+            .batch-print-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 0;
+                overflow: hidden;
+                visibility: hidden;
+                z-index: -1;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+                /* 余白をなしに */
+            }
+
+            body {
+                background-color: white !important;
+                font-size: 7.5pt;
+                line-height: 1.1;
+                color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 画面用UIを隠す */
+            .screen-view-container,
+            .no-print,
+            .sticky {
+                display: none !important;
+            }
+
+            /* 印刷用コンテナを表示 */
+            .batch-print-container {
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                visibility: visible !important;
+                overflow: visible !important;
+            }
+
+            .print-break-inside-avoid {
+                break-inside: avoid;
+            }
+
+            /* 改ページ設定 */
+            .page-break {
+                page-break-after: always;
+                break-after: page;
+                min-height: 1px;
+            }
+
+            /* フォントサイズ調整 */
+            h1 {
+                font-size: 14pt !important;
+                margin-bottom: 2px !important;
+            }
+
+            h2 {
+                font-size: 11pt !important;
+                margin-bottom: 4px !important;
+            }
+
+            h3 {
+                font-size: 10pt !important;
+                margin-bottom: 2px !important;
+            }
+
+            /* 余白調整 */
+            .p-4 {
+                padding: 4px !important;
+            }
+
+            .p-3 {
+                padding: 3px !important;
+            }
+
+            .p-2 {
+                padding: 2px !important;
+            }
+
+            .mb-4 {
+                margin-bottom: 6px !important;
+            }
+
+            .gap-4 {
+                gap: 8px !important;
+            }
+
+            /* 3カラムレイアウト（詳細項目用） */
+            .print-grid-cols-3 {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 4px;
+                align-items: start;
+                border-top: 1px solid #ccc;
+                border-left: 1px solid #ccc;
+            }
+
+            /* 詳細項目のボックススタイル */
+            .detail-item-box {
+                border-bottom: 1px solid #ccc;
+                border-right: 1px solid #ccc;
+                padding: 2px;
+                margin: 0;
+                break-inside: avoid;
+                height: 100%;
+                /* 高さ揃え */
+            }
+
+            /* 詳細項目のフォントサイズを小さくして収める */
+            .detail-item-text {
+                font-size: 7pt !important;
+                line-height: 1.1 !important;
+            }
+
+            .detail-item-score {
+                font-size: 8pt !important;
+            }
+
+            /* テーブルの罫線 */
+            .border-collapse {
+                border-collapse: collapse;
+            }
+
+            /* 印刷時のグラフエリア確保 */
+            .print-chart-container {
+                width: 100%;
+                height: 120px;
+                /* 高さをさらに抑えて1ページ目に収める */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            /* 印刷時のチャートボックス */
+            .print-chart-box {
+                padding: 2px !important;
+                margin-top: 2px !important;
+                border: 1px solid #ccc !important;
+            }
+        }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "lucide-react": "https://esm.sh/lucide-react@0.263.1?external=react",
+        "recharts": "https://esm.sh/recharts@2.12.0?external=react,react-dom"
+      }
+    }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel" data-type="module" data-presets="typescript,react">
+        import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import {
+            MinusCircle, PlusCircle, ChevronUp, ChevronDown, CheckSquare, Square,
+            Calculator, Scissors, TrendingUp, Store, User, X, Plus, Trash2,
+            Calendar, History, ChevronRight, Download, Upload, Printer, RefreshCw, Lock,
+            ArrowUp, ArrowLeft, Save, Menu, BarChart3, MessageSquare, Send, Users, Layers, Bell
+        } from 'lucide-react';
+        import {
+            Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+            ResponsiveContainer, Tooltip as RechartsTooltip, LineChart, Line,
+            XAxis, YAxis, CartesianGrid, Legend
+        } from 'recharts';
+
+
+
+        // --- CONSTANTS ---
+        const CATEGORIES = ['関係性', '接客', '技術', '実績', '店長'];
+        const AXES = ['マインド', 'チームワーク', '接客プロセス', '提案・対応', '技術力', '実績'];
+        const MANAGER_AXES = ['運営管理スキル', '顧客サービススキル', 'チームマネジメントスキル', '戦略思考スキル', '問題解決スキル', '個人の属性', '管理責任・コンプライアンス'];
+        const MONTH_LABELS = ['7月', '8月', '9月', '10月', '11月', '12月', '1月', '2月', '3月', '4月', '5月', '6月'];
+        const MONTHS = MONTH_LABELS.map((label, index) => ({ label, index }));
+
+        const CLAIM_DEDUCTIONS = {
+            'tech': [
+                { score: 0, label: "なし", desc: "技術クレームが発生しなかった、または発生しても適切に対応" },
+                { score: -3, label: "軽微 (-1~-3)", desc: "軽微な技術的問題（切り直し可能、一時的な品質低下など）" },
+                { score: -6, label: "中程度 (-4~-6)", desc: "日常に一定の影響を与える技術的問題（短期間完了の切り直しレベル）" },
+                { score: -9, label: "重大 (-7~-9)", desc: "重大な不便を引き起こす技術的失敗（切り直し不可）" },
+                { score: -10, label: "違反/事故 (-10)", desc: "重大な違反（禁止された施術方法、重大な切りすぎ）" }
+            ],
+            'accident': [
+                { score: 0, label: "なし", desc: "事故発生なし" },
+                { score: -10, label: "事故発生 (-10)", desc: "事故内容、改善度合いにより精査" }
+            ],
+            'service': [
+                { score: 0, label: "なし", desc: "クレーム発生なし" },
+                { score: -4, label: "軽微 (-1~-4)", desc: "軽微な接客ミス（対応の遅れ、些細な態度の問題など）" },
+                { score: -9, label: "不十分 (-5~-9)", desc: "極めて不十分な対応（不快感を与える態度など）" },
+                { score: -14, label: "不適切 (-10~-14)", desc: "明らかに不適切な態度を取った場合" },
+                { score: -15, label: "重大違反 (-15)", desc: "重大なルール違反行為があった場合" }
+            ]
+        };
+
+        const IMPROVEMENT_OPTS = [
+            { score: 5, label: "+5点", desc: "積極的な改善行動（自ら改善策を提案し実施）" },
+            { score: 3, label: "+3点", desc: "改善へ取り組み（意志を示し、一定の行動を起こした）" },
+            { score: 1, label: "+1点", desc: "反省の態度（問題を認識し、謝罪や反省の意を示した）" },
+            { score: 0, label: "0点", desc: "特になし" }
+        ];
+
+        const INITIAL_ITEMS = [
+            // --- 関係性 ---
+            { no: 1, category: '関係性', subCategory: '経営理念', item: '理念', axis: 'マインド', max: 3, score: null, desc: '理念を理解して言えるか、覚えているか', pointDesc: '社員が経営理念をどれだけ理解し、日常業務にどのように活かしているかを測定するもので、経営理念は組織の基本であり、この評価は社員の組織への貢献と一致度を反映します。', criteria: { 3: "経営理念を深く理解しており、自分の言葉で説明できる。組織の意思決定や日々の業務に積極的に取り入れている。", 2: "経営理念を正確に覚えており、その内容を説明できる。自分の業務に結びつけて参照し、実践している。", 1: "経営理念の基本的な内容は理解しているが、詳細な説明が難しい。日常業務に適切に組み込むことができていない。", 0: "経営理念を正確に覚えておらず、その内容を説明できない。業務との関連性を理解していない。" } },
+            { no: 2, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '挨拶', axis: 'マインド', max: 3, score: null, desc: '仲間に対して笑顔を意識し、自ら進んで挨拶をおこなっている', pointDesc: '挨拶の頻度、笑顔の有無、積極性、および一貫性に重点を置き、挨拶がコミュニケーションの基本としてチームワークと職場の雰囲気に与える影響を評価します。', criteria: { 3: "常に笑顔を意識し、自ら積極的に挨拶を行っている。ポジティブな職場環境を作り出している。", 2: "一貫して笑顔で挨拶を行い、周囲に対してフレンドリーな態度を示している。", 1: "挨拶をすることはあるが、常に笑顔や積極性に欠ける。時には挨拶を怠ることがある。", 0: "他のスタッフに対してほとんど挨拶をしない。笑顔が少なく、職場の雰囲気に貢献していない。" } },
+            { no: 3, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '言葉遣い', axis: 'マインド', max: 3, score: null, desc: '相手を尊重し、仕事中は「敬語」「さん付け」で接することができている', pointDesc: '言葉遣いの正確さ、敬語の使用、相手への尊敬表現、および一貫性に重点を置き、スタッフのコミュニケーション能力と敬意の表現を評価します。', criteria: { 3: "常に相手を尊重する態度を持ち、敬語で接し「さん付け」を正確に使い分けている。", 2: "ほとんどの場面で敬語と「さん付け」を適切に使用し、礼儀正しい言葉遣いを心掛けている。", 1: "一般的には敬語を使用しているが、時に不適切な言葉遣いや「さん付け」の忘れが見られる。", 0: "敬語や「さん付け」の使用が不十分で、しばしば不適切な言葉遣いが見られる。" } },
+            { no: 4, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '態度', axis: 'マインド', max: 3, score: null, desc: '謙虚な姿勢で相手が不快にならない行動がとれている', pointDesc: '謙虚な態度、他者への敬意、職場コミュニケーションの質に焦点を当て、スタッフの対人関係能力と職場への貢献度を評価します。', criteria: { 3: "常に謙虚な姿勢を保ち、相手に敬意を示す行動を取っている。他人の意見を尊重し、積極的に聞く。", 2: "通常、謙虚な態度を保ち、他者を尊重する行動を取っている。建設的なコミュニケーションを心掛けている。", 1: "時折、謙虚さを欠く行動が見られ、他者を尊重する態度に一貫性がない。", 0: "謙虚な姿勢や他者への敬意が不足しており、自己中心的な行動が見られる。" } },
+            { no: 5, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '会話力・傾聴', axis: 'マインド', max: 3, score: null, desc: '日常会話をおこない、キャッチボールができていて、一方的に話をせず、相手の話を聞くことができる', pointDesc: '会話力と傾聴のバランス、相手とのコミュニケーション質を測ります。', criteria: { 3: "日常会話をスムーズに行い、相手とのキャッチボールが自然にできている。相手の話を注意深く聴く。", 2: "日常会話を適切に行い、相手とのやり取りがバランス良くできている。", 1: "日常会話は行うが、時々一方的な会話になることがある。傾聴が不足している。", 0: "日常会話が一方的であり、相手とのキャッチボールが不十分。他者の話を十分に聞かない。" } },
+            { no: 6, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '認める・感謝', axis: 'マインド', max: 3, score: null, desc: '相手の良いところを認め、労い・感謝の気持ちを言葉で伝えることができる', pointDesc: '他者の成果や努力を認め、感謝を表現する能力に基づき、良好な環境を促進する対人関係スキルを評価します。', criteria: { 3: "常に他者の良い点を認め、積極的に労いと感謝の言葉を伝えている。", 2: "他者の良い点を認め、感謝の気持ちを言葉で表現している。", 1: "他者の良い点を認めることはあるが、一貫して感謝を表現することができていない。", 0: "他者の成果や良い点を認めることが少なく、感謝の表現も不足している。" } },
+            { no: 7, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '相手側からの組立て', axis: 'マインド', max: 3, score: null, desc: '相手の心境を考えコミュニケーションギャップがあることを理解し、接することができている', pointDesc: '相手の心境や立場を理解し、それに基づいた適切なコミュニケーション能力を測るものです。', criteria: { 3: "常に相手の心境を考慮し、ギャップを洞察し、それに基づいて適切に接している。", 2: "一般的には相手の心境を考え、ギャップを意識して接している。", 1: "相手の心境を考慮することがあるが、理解が一貫していない。", 0: "相手の心境をほとんど考慮せず、自己中心的な対応が目立つ。" } },
+            { no: 8, category: '関係性', subCategory: '相談・報告・連絡', item: '報連相', axis: 'マインド', max: 3, score: null, desc: '相談(問題解決)・報告(義務)・連絡(気遣い)の必要性や意味を理解し、実践できている', pointDesc: '報連相の理解度と日常業務への効果的な組み込み度を測定します。', criteria: { 3: "報連相の必要性と意味を深く理解し、適切に実践している。問題解決に向けて積極的に相談・報告する。", 2: "報連相の重要性を理解し、これらを一貫して実行している。", 1: "報連相の基本的な理解はあるが、実践において一貫性が不足している場合がある。", 0: "報連相の必要性や意味を十分に理解しておらず、適切に実行していない。" } },
+            { no: 9, category: '関係性', subCategory: '協力', item: '協力体制', axis: 'チームワーク', max: 3, score: null, desc: '他のスタッフと協調性・協力姿勢をもち、チーム意識を持って勤務している', pointDesc: '協調性、協力姿勢、チームの目標達成への貢献度を反映しています。', criteria: { 3: "他のスタッフとの協調性と協力姿勢が顕著で、常にチーム意識を持って積極的に勤務している。", 2: "他のスタッフとの協調性と協力姿勢を示し、チーム意識を持って勤務している。", 1: "他のスタッフとの協調性と協力姿勢に一貫性が欠けることがある。", 0: "他のスタッフと協調する意欲が不足しており、協力姿勢が不十分。" } },
+            { no: 10, category: '関係性', subCategory: '協力', item: '率先垂範', axis: 'チームワーク', max: 3, score: null, desc: '会社の方向性を理解し、ブロックの取り組みに率先垂範の意識で勤務している', pointDesc: '会社の方向性への理解、率先垂範の姿勢、リーダーシップに焦点を当てています。', criteria: { 3: "会社の方向性を深く理解し、その精神を体現する行動を取っている. 常に先導的な役割を果たす。", 2: "会社の方向性を理解し、それに沿った行動を取っている. 積極的に参加し率先垂範している。", 1: "会社の方向性については理解しているが、率先垂範の行動に一貫性が欠ける。", 0: "会社の方向性への理解が不十分であり、率先垂範の行動がほとんど見られない。" } },
+            { no: 11, category: '関係性', subCategory: '協力', item: 'シフト', axis: 'チームワーク', max: 3, score: null, desc: 'シフトに対して協力的（自ブロック・他ブロックへの出向・急なシフト変更・公出など）で、シフトで迷惑をかけていないか', pointDesc: 'シフトへの協力度、柔軟性、およびチームへの影響を評価します。', criteria: { 3: "シフトに対して非常に協力的であり、自ブロックだけでなく他ブロックへの出向も積極的に行う。", 2: "シフトに関して協力的な姿勢を持ち、必要に応じて他ブロックへの出向や変更に対応している。", 1: "シフトへの協力的な姿勢はあるが、時に消極的なことがある。", 0: "シフトに対して協力的でなく、変更や出向を避ける傾向がある。" } },
+            { no: 12, category: '関係性', subCategory: '協力', item: 'お店のムードメーカー', axis: 'チームワーク', max: 3, score: null, desc: '店舗の空気・雰囲気を明るくしたり、盛り上げたり、好転させることができるか', pointDesc: '店舗の雰囲気を明るく盛り上げる能力、スタッフや顧客へのポジティブな影響を測ります。', criteria: { 3: "店舗の雰囲気を常に明るくし、積極的に盛り上げることができる. 良い影響を与えている。", 2: "店舗の雰囲気を明るく保ち、スタッフや顧客の気持ちを盛り上げる努力をしている。", 1: "店舗の雰囲気を明るくする努力は見られるが、一貫性に欠けることがある。", 0: "店舗の雰囲気を明るくすることができず、盛り上げる努力が不足している。" } },
+            { no: 13, category: '関係性', subCategory: 'ルール・マナー', item: 'コンプライアンス', axis: 'チームワーク', max: 3, score: null, desc: '上司・部下・同僚に対してハラスメント行為がなく、コンプライアンスが徹底できているか', pointDesc: 'コンプライアンスへの理解度、その遵守状況を評価しています。', criteria: { 3: "ハラスメント行為が一切なく、コンプライアンスを完全に守っている. 模範を示している。", 2: "ハラスメント行為がなく、コンプライアンスに沿った行動をしている。", 1: "ハラスメント行為はないが、コンプライアンスへの理解や実践に一貫性が欠ける。", 0: "コンプライアンスに対する理解が不十分で、適切な職場行動が取れていない。" } },
+            { no: 14, category: '関係性', subCategory: '清掃・身だしなみ', item: '公平公正・不平不満・愚痴', axis: 'チームワーク', max: 3, score: null, desc: 'すべてのスタッフに対して平等に接することができ、不平不満・愚痴を広めていない', pointDesc: '全スタッフに対する公平かつ公正な接し方と不平不満や愚痴の職場への影響を評価しています。', criteria: { 3: "すべてのスタッフに対して公平かつ公正に接し、偏見のない態度を示している. 不平不満を言わない。", 2: "多くの場合、スタッフに対して公平かつ公正に接し、偏りのない態度を取っている。", 1: "スタッフに対して公平かつ公正に接することに一貫性が欠け、時に偏見が見られる。", 0: "スタッフに対して公平かつ公正に接することができず、偏った態度が顕著。" } },
+            { no: 15, category: '関係性', subCategory: '清掃・身だしなみ', item: 'ルール', axis: 'チームワーク', max: 3, score: null, desc: 'SCや店舗ルール、喫煙マナー、カギ・入館証の管理、通勤ルール、勤務表、打刻忘れなどルールを守れているか', pointDesc: '店舗や職場のルール、マナー、およびセキュリティ関連の規則を守る程度に焦点を当てています。', criteria: { 3: "施設・店舗ルール等を完璧に守っている. 他のスタッフにも良い影響を与えている。", 2: "ほとんどの場合、ルールを遵守している. ルールを守る意識が高い。", 1: "ルールを守ることに一貫性が欠けることがあり、時には違反が見られる。", 0: "ルールを守る意識が低く、頻繁にルールを破っている。" } },
+            { no: 16, category: '関係性', subCategory: '清掃・身だしなみ', item: '店舗の内外清掃', axis: 'チームワーク', max: 3, score: null, desc: '人任せにせず店内やバックヤードの清掃・整理整頓などを率先してできている', pointDesc: '店舗の清掃・整理整頓に対する責任感、主体性を評価しています。', criteria: { 3: "他人に任せることなく、積極的に店内やバックヤードの清掃・整理整頓を行っている。", 2: "一般的に店内やバックヤードの清掃・整理整頓を行い、必要な時には率先して実施している。", 1: "清掃・整理整頓を行うことはあるが、一貫性が欠け、他人に任せる傾向が見られる。", 0: "店内やバックヤードの清掃・整理整頓を他人に任せることが多く、自ら率先して行わない。" } },
+            { no: 17, category: '関係性', subCategory: '清掃・身だしなみ', item: '容姿・服装・臭い対策', axis: 'チームワーク', max: 3, score: null, desc: 'マニュアルに記載されている禁止項目、消臭ルールを守っている', pointDesc: 'マニュアルに基づいた服装規定、消臭ルールの遵守を評価しています。', criteria: { 3: "マニュアル記載の規定を完璧に守り、常に清潔感のある容姿で勤務している。", 2: "服装規定やルールをほとんどの場合守っており、清潔感のある容姿を保持している。", 1: "服装規定やルールを守ることに一貫性が欠けることがあり、注意が必要な場合がある。", 0: "服装規定やルールを守っていないことが多く、清潔感に欠ける容姿で勤務している。" } },
+            // --- 接客 ---
+            { no: 18, category: '接客', subCategory: '入退店時対応', item: '正しい挨拶・待機姿勢', axis: '接客プロセス', max: 3, score: null, desc: '椅子や壁にもたれずにマニュアル通りの「表情、声量でお客様の方を見て」挨拶ができている', pointDesc: '正しい待機姿勢で、マニュアル通りの「表情、声量でお客様の方を見て」挨拶ができているか。挨拶は自然で、視線が一貫して適切であるかを評価します。', criteria: { 3: "常に正しい待機姿勢を保ち、表情と声量がマニュアル通り. 挨拶は自然で、視線も一貫して適切。", 2: "大部分の時間で正しい待機姿勢を保ち、挨拶はマニュアルに準じている. 表情・声量は概ね適切。", 1: "待機姿勢が不安定で、時折マニュアルから逸脱する. 挨拶の表情や声量に一貫性が欠けることがある。", 0: "待機姿勢や挨拶がマニュアルの基準を満たしていない. 不適切な表情や声量が見られる。" } },
+            { no: 19, category: '接客', subCategory: '入退店時対応', item: '券売機案内', axis: '接客プロセス', max: 3, score: null, desc: '忙しい時でも分からない人目線で、券売機近くまで行き丁寧な言葉・所作で説明ができている', pointDesc: '忙しい時でも、分からないお客様に対して券売機近くまで行き、丁寧な言葉と所作で説明ができているか。ニーズを敏感に察知し積極的に案内しているかを評価します。', criteria: { 3: "常にニーズを察知し積極的に案内. 丁寧な言葉と所作で、お客様の理解を深める説明を行う。", 2: "大部分の場合適切に案内. 言葉遣い等は丁寧だが、忙しい時に詳細な説明が欠ける場合がある。", 1: "ニーズを見逃すことがあり案内が不十分. 言葉遣いや所作に一貫性が欠け、説明が不明瞭。", 0: "お客様のニーズに応じた案内がほとんど行われない. 説明が雑で所作も不適切。" } },
+            { no: 20, category: '接客', subCategory: '入退店時対応', item: '待合席への誘導・カット席へのお出迎え', axis: '接客プロセス', max: 3, score: null, desc: '丁寧なお客様誘導やカット席への案内ができ、呼びつけるのではなく笑顔でカット席までお出迎えができている', pointDesc: '丁寧なお客様誘導やカット席への案内ができ、呼びつけるのではなく笑顔でカット席までお出迎えができているか。快適な雰囲気を提供できているかを評価します。', criteria: { 3: "常にお客様を積極的に、且つ非常に丁寧に誘導. 笑顔と明るい挨拶で快適な雰囲気を提供。", 2: "大部分の場合丁寧で親切. 基本的には適切な態度だが、状況によりサービスレベルにばらつきがある。", 1: "時折不十分な誘導や出迎えをする. 笑顔や親しみやすい接客態度に欠ける場合がある。", 0: "誘導や出迎えがほとんど行われない、または非常に不十分. お客様に冷たい印象を与える。" } },
+            { no: 21, category: '接客', subCategory: '入退店時対応', item: '再来店の促し', axis: '接客プロセス', max: 3, score: null, desc: 'お客様が入り口を出るところまで見届け、リセット作業をしていても手を止めて分離礼しお見送りができている', pointDesc: 'お客様が入り口を出るところまで見届け、リセット作業をしていても手を止めて分離礼しお見送りができているか。心からのお見送りを評価します。', criteria: { 3: "出口まで一貫して注意深く見届け、作業を中断して分離礼を行い、心からのお見送りをする。", 2: "ほとんどの場合出口まで見送り分離礼を実施. 忙しい時でも適切なお見送りを心がけている。", 1: "出口までの見送りや分離礼に一貫性が欠ける. 作業中にお客様への注意が不十分なことがある。", 0: "出口までの見送りを怠り分離礼を行わない. 冷たい印象を与え、再来店の促しに貢献していない。" } },
+            { no: 22, category: '接客', subCategory: '入退店時対応', item: 'クローゼットドアの開閉・椅子回し', axis: '接客プロセス', max: 3, score: null, desc: 'クローゼットドアを開閉させ手荷物の収納を促し、椅子を回してお客様が座りやすい配慮ができているか', pointDesc: 'クローゼットドアを開閉させ手荷物の収納を促し、椅子を回してお客様が座りやすい配慮ができているか。快適さと安全性の確保を評価します。', criteria: { 3: "開閉を迅速・丁寧に行い収納を積極勧奨. 椅子を適切に回し快適さと安全性を確保。", 2: "一般的に開閉を適切に行い収納を促す. 椅子を回す際も概ね快適さに配慮している。", 1: "開閉や収納の促しに一貫性が欠ける. 椅子を回す際のお客様への配慮が不十分なことがある。", 0: "開閉を怠り収納も促さない. 椅子を回す際のお客様の快適さや安全性を考慮していない。" } },
+            { no: 23, category: '接客', subCategory: '入退店時対応', item: 'チケット受け取り・ターミナル入力', axis: '接客プロセス', max: 3, score: null, desc: '両手で「ありがとうございます」などの言葉を添えて受け取り、ターミナル入力を適切に行っているか', pointDesc: '両手で「ありがとうございます」などの言葉を添えてチケットを受け取り、ターミナル入力を適切に行っているか。正確さと礼儀を評価します。', criteria: { 3: "チケットを常に両手で受け取り、適切な言葉を添える. 入力は迅速かつ正確でミスがない。", 2: "ほとんどの場合両手で受け取り礼儀正しい. 入力は概ね正確で軽微なミスは即修正される。", 1: "受け取り時に両手を使うことが一貫せず、言葉遣いに欠ける. 入力に誤りが見られる。", 0: "受け取りが雑で両手を使わず言葉も不足. 入力に頻繁な誤りがあり改善の兆しがない。" } },
+            { no: 24, category: '接客', subCategory: '入退店時対応', item: '顔回りの毛の処理 (施術中・ウォッシャー後)', axis: '接客プロセス', max: 3, score: null, desc: '常にお客様の顔回りの状況を確認し、適切に対応できている', pointDesc: '常にお客様の顔回りの状況を確認し適切に対応できているか（施術中・ウォッシャー後）。丁寧さと迅速な処理を評価します。', criteria: { 3: "施術中・ウォッシャー後を通じ細かくチェック. 丁寧に迅速に処理し快適さを最優先にする。", 2: "一般的に適切に処理し快適さを保つ. 施術中はチェックするが、終了後の確認が若干不十分。", 1: "顔回りの毛のチェックと処理に一貫性が欠ける. 不快感を引き起こし迅速な対応を要する。", 0: "処理を怠り快適さを著しく損なう. 施術中・ウォッシャー後のチェック不十分で不満を招く。" } },
+            { no: 25, category: '接客', subCategory: '入退店時対応', item: '毛払い対応（肩・足元の毛払い）', axis: '接客プロセス', max: 3, score: null, desc: '肩・足元の毛払いを丁寧に実施し「肩の毛を払いますね」などのお声がけをし、使用するものを区別出来ている', pointDesc: '肩・足元の毛払いを丁寧に実施し「肩の毛を払いますね」などのお声がけをし、使用する道具を区別しているか。快適さと衛生を評価します。', criteria: { 3: "肩・足元の毛払いを非常に丁寧に行い事前に声掛け. 適切な道具で快適さと衛生を徹底。", 2: "一般的に丁寧に行い声掛けも適切. 正しい道具を使い分けているが、より細かな配慮の余地あり。", 1: "丁寧さに一貫性が欠け声掛けが疎か. 道具の選択が不適切で快適さを十分に考慮していない。", 0: "毛払いを怠るか非常に雑. 事前声掛けが不足し、お客様に不快感を与えることがある。" } },
+            { no: 26, category: '接客', subCategory: 'カウンセリング時対応', item: 'お客様に平等に接している', axis: '提案・対応', max: 3, score: null, desc: '指名を受け付けていない・意識的にお客様を選んでいないか', pointDesc: '指名を受け付けていない・意識的にお客様を選んでいないか。すべてのお客様に平等に接し、質の高いサービスを提供しているかを評価します。', criteria: { 3: "一貫してすべてのお客様に平等に接する. 指名を受けず、誰に対しても同じ質の高いサービスを提供。", 2: "大部分の時間で平等に接するが、時折偏りが見られる. 一般的には良質なサービスを提供。", 1: "特定のお客様への偏りが時折見受けられ、サービスの質にばらつきがある. 一貫性に欠ける。", 0: "特定のお客様のみ優遇する対応が顕著. 指名を受けているかのような行動があり不平等。" } },
+            { no: 27, category: '接客', subCategory: 'カウンセリング時対応', item: 'オーダー手順', axis: '提案・対応', max: 3, score: null, desc: '手順を意識しておこなえている（二者択一・返事・復唱・共通のものさし）', pointDesc: '手順を意識しておこなえているか（二者択一・返事・復唱・共通のものさし）。認識の不一致を防ぐための手順遵守を評価します。', criteria: { 3: "オーダー手順を完璧に実行し、共通の基準を適切に用いる. ニーズと期待を完全に理解している。", 2: "一般的に適切に実行し、基本的要素をほぼ正確に行う. 手順に沿ったカウンセリングを提供。", 1: "手順の一部が不十分で認識のずれを生じさせる. 復唱等が正確でなく期待を満たしていない。", 0: "手順を守らず重要ステップを省略. 混乱や不満を頻繁に引き起こし、サービス品質を損なう。" } },
+            { no: 28, category: '接客', subCategory: 'カウンセリング時対応', item: 'お客様心理の理解（まず傾聴）', axis: '提案・対応', max: 3, score: null, desc: '否定せずに一旦受け入れる姿勢が出来ているか・お客様が不快に思う対応をしていないか', pointDesc: '否定せずに一旦受け入れる姿勢が出来ているか・お客様が不快に思う対応をしていないか。傾聴と共感を評価します。', criteria: { 3: "話を注意深く傾聴し否定せず受け入れる. ニーズに敏感で不快感を与える対応は一切しない。", 2: "大部分の時間で話を聴き意見を受け入れる. 不快に思われる対応を避ける努力をしている。", 1: "話を聴く姿勢に一貫性が欠け、否定的な反応を示すことがある. 感情コントロールが必要。", 0: "話を十分に聴かず頻繁に否定する. 心理を理解せず不快な対応が目立ち、不信感を招く。" } },
+            { no: 29, category: '接客', subCategory: 'カウンセリング時対応', item: 'お客様が求めるイメージの提案', axis: '提案・対応', max: 3, score: null, desc: 'お客様の要望に対して適切なアドバイス、提案ができる', pointDesc: 'お客様の要望に対して適切なアドバイス、提案ができるか。専門知識を活かした期待を超える提案を評価します。', criteria: { 3: "要望を正確に理解し専門知識で適切にアドバイス. イメージを具現化し期待を超える提案を行う。", 2: "一般的には適切なアドバイスを行う. 要求を理解し提案するが、さらなる創造性の余地あり。", 1: "提案が一貫せず不適切なアドバイスが見られる. 知識不足等により期待に応えられない。", 0: "要望を理解していないか不適切な提案が多い. 知識不足が顕著で信頼を損なう可能性がある。" } },
+            { no: 30, category: '接客', subCategory: 'リセット作業', item: '適切な鏡の見せ方', axis: '提案・対応', max: 3, score: null, desc: '両手で鏡を持ち、丁寧な言葉・所作で確認ができているか（表情・仕上がり確認含む）', pointDesc: '両手で鏡を持ち、丁寧な言葉・所作で確認ができているか（表情・仕上がり確認含む）。丁寧な確認作業を評価します。', criteria: { 3: "常に両手で鏡を持ち完全に映す角度で提示. 丁寧な言葉・所作で満足度を確認しながら対応。", 2: "一般的には両手で鏡を持ち適切な角度で提示. 丁寧だが、時に細部の確認を促す必要がある。", 1: "鏡の持ち方や角度に一貫性が欠け、不十分な確認. 所作に改善の余地あり。", 0: "両手で持つことが少なく不適切な角度で提示. 仕上がりを十分に確認できない所作である。" } },
+            { no: 31, category: '接客', subCategory: 'リセット作業', item: '切り直し要望へ対応', axis: '提案・対応', max: 3, score: null, desc: '切り直しの要望を快く引き受けている. 感情的にならずにお客様が不満に感じる箇所をそのままにせず対応している', pointDesc: '切り直しの要望を快く引き受けているか、感情的にならずにお客様が不満に感じる箇所をそのままにせず対応しているか。柔軟性と誠実さを評価します。', criteria: { 3: "常に快く理解して引き受ける. プロな態度で不満点を丁寧に聞き、納得の結果を提供する。", 2: "一般的には快く応じ適切に対応. 不満に対して理解を示すが、さらなる配慮の余地あり。", 1: "応じるが時折躊躇や不快感を示す. 不満点に対する理解と対応が一貫していない。", 0: "不快感を示し快く対応する姿勢がない. 感情的になりプロフェッショナリズムに欠ける。" } },
+            { no: 32, category: '接客', subCategory: 'リセット作業', item: '適切なクロス畳み・カットブース・床の清掃', axis: '提案・対応', max: 3, score: null, desc: 'クロスを一客毎にきれいに畳み、カットブースや床回りに目立つ毛クズが残さず、鏡や滅菌機に指紋がないか', pointDesc: 'クロスを一客毎にきれいに畳み、カットブースや床回りに目立つ毛クズが残さず、鏡や滅菌機に指紋がないか。店舗の美観と清潔維持を評価します。', criteria: { 3: "毎回丁寧に畳み、ブース・床の清掃が完璧. 鏡等に指紋を残さず細心の注意を払い衛生を維持。", 2: "畳み方が概ね丁寧で清掃も適切. 鏡等に時折指紋が見られるが、すぐに対応している。", 1: "畳み方に不均一さがあり清掃がおろそかになることがある. より頻繁な清掃が必要な状態。", 0: "畳み方が雑で清掃が不十分. 鏡等に頻繁に指紋が残り、清潔感に欠ける状態が目立つ。" } },
+            { no: 33, category: '接客', subCategory: 'リセット作業', item: '適正な消毒', axis: '提案・対応', max: 4, score: null, desc: 'バリカン、ハサミ、トリマー、アタッチメント、ダッカール、産毛トリマー、手指などの消毒が適切に行われているか', pointDesc: '適正な消毒 (2択: -1 or 4)', validScores: [4, -1], criteria: { 4: "すべての道具（バリカン、ハサミ、トリマー等）を使用後、確実に消毒し、手指消毒も徹底している. 最高水準の衛生維持。", [-1]: "一部の道具や手指の消毒が不十分. 衛生管理に一貫性が欠け、改善が必要な状態。" } },
+            { no: 34, category: '接客', subCategory: 'クレーム', item: '接客クレーム', axis: '提案・対応', max: -15, score: 0, desc: '接客クレームの内容、改善度合いにより精査', pointDesc: '接客クレームの発生状況やその重大性に基づき、改善の取り組みを含めて評価します。', criteria: { 0: "クレームなし. 良好な接客が維持されている。", [-5]: "軽微なクレームあり. 改善の余地がある。", [-15]: "重大な接客クレームあり. 深刻な改善が必要。" } },
+            // --- 技術 ---
+            { no: 35, category: '技術', subCategory: 'フォーマル', item: '再現性 (F)', axis: '技術力', max: 4, score: null, desc: 'お客様の要望どおりになっている', pointDesc: '再現性 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "お客様の要望を完璧に再現し、高い満足度を得ている。", 0: "要望通りではない。" } },
+            { no: 36, category: '技術', subCategory: 'フォーマル', item: '仕上がり品質 (F)', axis: '技術力', max: 1, score: null, desc: '全体のバランス、シルエットがきれいに整っている(左右対称)', pointDesc: '仕上がり品質', criteria: { 1: "バランス良く整っている。", 0: "バランスに難あり。" } },
+            { no: 37, category: '技術', subCategory: 'フォーマル', item: 'セニング (F)', axis: '技術力', max: 1, score: null, desc: '質感・量感調整（揃った、自然な、シャギー）ができる', pointDesc: 'セニングワーク', criteria: { 1: "適切に調整できている。", 0: "調整が不十分。" } },
+            { no: 38, category: '技術', subCategory: '裾刈り', item: '再現性 (裾)', axis: '技術力', max: 4, score: null, desc: 'お客様の要望どおりになっている', pointDesc: '再現性 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "お客様の要望を完璧に再現し、高い満足度を得ている。", 0: "要望通りではない。" } },
+            { no: 39, category: '技術', subCategory: '裾刈り', item: '仕上がり品質 (裾)', axis: '技術力', max: 1, score: null, desc: '全体のバランス、シルエットがきれいに整っている(左右対称)', pointDesc: '仕上がり品質', criteria: { 1: "良", 0: "否" } },
+            { no: 40, category: '技術', subCategory: '裾刈り', item: 'セニング (裾)', axis: '技術力', max: 1, score: null, desc: '質感・量感調整（揃った、自然な、シャギー）ができる', pointDesc: 'セニングワーク', criteria: { 1: "良", 0: "否" } },
+            { no: 41, category: '技術', subCategory: 'スポーツ刈り', item: '再現性 (スポ)', axis: '技術力', max: 4, score: null, desc: 'お客様の要望どおりになっている', pointDesc: '再現性 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "完璧に再現。", 0: "不可。" } },
+            { no: 42, category: '技術', subCategory: 'スポーツ刈り', item: '仕上がり品質 (スポ)', axis: '技術力', max: 1, score: null, desc: '全体のバランス、シルエットがきれいに整っている(左右対称)', pointDesc: '仕上がり品質', criteria: { 1: "良", 0: "否" } },
+            { no: 43, category: '技術', subCategory: 'スポーツ刈り', item: 'セニング (スポ)', axis: '技術力', max: 1, score: null, desc: '質感・量感調整（揃った、自然な、シャギー）ができる', pointDesc: 'セニングワーク', criteria: { 1: "良", 0: "否" } },
+            { no: 44, category: '技術', subCategory: 'ソフトモヒカン', item: '再現性 (ソフモヒ)', axis: '技術力', max: 4, score: null, desc: 'お客様の要望どおりになっている', pointDesc: '再現性 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "完璧に再現。", 0: "不可。" } },
+            { no: 45, category: '技術', subCategory: 'ソフトモヒカン', item: '仕上がり品質 (ソフモヒ)', axis: '技術力', max: 1, score: null, desc: '全体のバランス、シルエットがきれいに整っている(左右対称)', pointDesc: '仕上がり品質', criteria: { 1: "良", 0: "否" } },
+            { no: 46, category: '技術', subCategory: 'ソフトモヒカン', item: 'セニング (ソフモヒ)', axis: '技術力', max: 1, score: null, desc: '質感・量感調整（揃った、自然な、シャギー）ができる', pointDesc: 'セニングワーク', criteria: { 1: "良", 0: "否" } },
+            { no: 47, category: '技術', subCategory: 'ワンレングス', item: '再現性 (ワンレン)', axis: '技術力', max: 4, score: null, desc: 'お客様の要望どおりになっている', pointDesc: '再現性 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "完璧に再現。", 0: "不可。" } },
+            { no: 48, category: '技術', subCategory: 'ワンレングス', item: '仕上がり品質 (ワンレン)', axis: '技術力', max: 1, score: null, desc: '全体のバランス、シルエットがきれいに整っている(左右対称)', pointDesc: '仕上がり品質', criteria: { 1: "良", 0: "否" } },
+            { no: 49, category: '技術', subCategory: 'ワンレングス', item: 'セニング (ワンレン)', axis: '技術力', max: 1, score: null, desc: '質感・量感調整（揃った、自然な、シャギー）ができる', pointDesc: 'セニングワーク', criteria: { 1: "良", 0: "否" } },
+            { no: 50, category: '技術', subCategory: 'レイヤー', item: '再現性 (レイヤー)', axis: '技術力', max: 4, score: null, desc: 'お客様の要望どおりになっている', pointDesc: '再現性 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "完璧に再現。", 0: "不可。" } },
+            { no: 51, category: '技術', subCategory: 'レイヤー', item: '仕上がり品質 (レイヤー)', axis: '技術力', max: 1, score: null, desc: '全体のバランス、シルエットがきれいに整っている(左右対称)', pointDesc: '仕上がり品質', criteria: { 1: "良", 0: "否" } },
+            { no: 52, category: '技術', subCategory: 'レイヤー', item: 'セニング (レイヤー)', axis: '技術力', max: 1, score: null, desc: '質感・量感調整（揃った、自然な、シャギー）ができる', pointDesc: 'セニングワーク', criteria: { 1: "良", 0: "否" } },
+            { no: 53, category: '技術', subCategory: 'エアウォッシャー', item: '説明・手順・時間', axis: '技術力', max: 4, score: null, desc: 'エアウォッシャーを使用していくうえで注意点を説明し、正しい手順で適切な時間でできる', pointDesc: '事前説明・施術手順・施術時間 (2択: 0 or 4)', validScores: [4, 0], criteria: { 4: "完璧な説明...", 0: "不十分" } },
+            { no: 54, category: '技術', subCategory: 'エアウォッシャー', item: '適切な施術方法', axis: '技術力', max: 2, score: null, desc: 'かける前に両手で毛クズを浮かせ、地肌に対し適切な力加減や方法で行うことができる', validScores: [2, 0], criteria: { 2: "適切", 0: "不適切" } },
+            { no: 55, category: '技術', subCategory: 'エアウォッシャー', item: '施術時の配慮', axis: '技術力', max: 2, score: null, desc: '耳周りを作業する際、音への配慮（吸い込み口の向き、耳を押さえる）ができる', validScores: [2, 0], criteria: { 2: "配慮あり", 0: "配慮なし" } },
+            { no: 56, category: '技術', subCategory: 'エアウォッシャー', item: '確認', axis: '技術力', max: 2, score: null, desc: '終了時に毛クズが落ちてこないか確認している', validScores: [2, 0], criteria: { 2: "確認あり", 0: "確認なし" } },
+            { no: 57, category: '技術', subCategory: 'トリマー', item: 'トリマーワーク', axis: '技術力', max: 4, score: null, desc: '耳周り、襟まわりの処理が安全に配慮しながらお客様の要望通りできている', validScores: [4, 0], criteria: { 4: "安全かつ...", 0: "危険または..." } },
+            { no: 58, category: '技術', subCategory: 'クレーム', item: '技術クレーム', axis: '技術力', max: -10, score: 0, desc: '技術クレームの内容、改善度合いにより精査', criteria: { 0: "なし", [-5]: "軽微", [-10]: "重大" } },
+            { no: 59, category: '技術', subCategory: '事故', item: '耳切事故', axis: '技術力', max: -10, score: 0, desc: '事故内容、改善度合いにより精査', criteria: { 0: "なし", [-10]: "事故発生" } },
+            // --- 店長 ---
+            { no: 60, category: '店長', subCategory: '運営管理スキル', item: '日常業務の遂行', axis: '店長スキル', max: 4, score: null, desc: '日々の開店準備から閉店までの流れ...', validScores: [4, 3, 2, 1], criteria: { 4: "業務の計画...", 3: "業務は一定...", 2: "ほとんど...", 1: "業務の計画..." } },
+            { no: 61, category: '店長', subCategory: '運営管理スキル', item: '売上の最大化', axis: '店長スキル', max: 4, score: null, desc: '売上の管理を通じて...', validScores: [4, 3, 2, 1], criteria: { 4: "売上の追跡...", 3: "日々の...", 2: "売上の追跡は...", 1: "売上追跡や..." } },
+            { no: 62, category: '店長', subCategory: '運営管理スキル', item: '安全と衛生の維持', axis: '店長スキル', max: 4, score: null, desc: '安全基準の遵守と...', validScores: [4, 3, 2, 1], criteria: { 4: "安全と衛生...", 3: "安全基準と...", 2: "安全と衛生は...", 1: "安全基準や..." } },
+            { no: 63, category: '店長', subCategory: '顧客サービススキル', item: '顧客対応の向上', axis: '店長スキル', max: 4, score: null, desc: '店舗でのお客さまからの...', validScores: [4, 3, 2, 1], criteria: { 4: "対応が非常に...", 3: "ほとんどの...", 2: "問い合わせや...", 1: "お客さまからの..." } },
+            { no: 64, category: '店長', subCategory: '顧客サービススキル', item: 'サービス品質の一貫性', axis: '店長スキル', max: 4, score: null, desc: 'お客さまからの...', validScores: [4, 3, 2, 1], criteria: { 4: "お客さまの...", 3: "お客さまからの...", 2: "フィードバックは...", 1: "お客さまからの..." } },
+            { no: 65, category: '店長', subCategory: 'チームマネジメントスキル', item: '明確なリーダーシップ', axis: '店長スキル', max: 4, score: null, desc: 'メンバーに対して...', validScores: [4, 3, 2, 1], criteria: { 4: "チームに対して...", 3: "明確なビジョンと...", 2: "ある程度の...", 1: "ビジョンや..." } },
+            { no: 66, category: '店長', subCategory: 'チームマネジメントスキル', item: 'コミュニケーション', axis: '店長スキル', max: 4, score: null, desc: '上司、部下、他の店舗...', validScores: [4, 3, 2, 1], criteria: { 4: "コミュニケーションを...", 3: "効果的な...", 2: "コミュニケーションは...", 1: "コミュニケーションが..." } },
+            { no: 67, category: '店長', subCategory: 'チームマネジメントスキル', item: 'スタッフの育成とモチベーション向上', axis: '店長スキル', max: 4, score: null, desc: '部下のスキル向上...', validScores: [4, 3, 2, 1], criteria: { 4: "部下の成長と...", 3: "部下のスキル...", 2: "部下育成には...", 1: "部下の育成に..." } },
+            { no: 68, category: '店長', subCategory: '戦略思考スキル', item: '長期ビジョン・目標の策定', axis: '店長スキル', max: 4, score: null, desc: '店舗が将来的に...', validScores: [4, 3, 2, 1], criteria: { 4: "長期ビジョンが...", 3: "明確な長期...", 2: "ある程度の...", 1: "長期的な..." } },
+            { no: 69, category: '店長', subCategory: '戦略思考スキル', item: '具体的な行動計画の策定', axis: '店長スキル', max: 4, score: null, desc: '設定した目標に向けて...', validScores: [4, 3, 2, 1], criteria: { 4: "非常に詳細...", 3: "目標を達成...", 2: "基本的な...", 1: "目標達成の..." } },
+            { no: 70, category: '店長', subCategory: '戦略思考スキル', item: 'リスクへの備え', axis: '店長スキル', max: 4, score: null, desc: '潜在的な問題や...', validScores: [4, 3, 2, 1], criteria: { 4: "広範囲にわたる...", 3: "主要なリスク...", 2: "一部のリスク...", 1: "潜在的な..." } },
+            { no: 71, category: '店長', subCategory: '問題解決スキル', item: '問題解決のための詳細な問題分析', axis: '店長スキル', max: 4, score: null, desc: '問題が発生した際に...', validScores: [4, 3, 2, 1], criteria: { 4: "深い洞察力...", 3: "問題の背後...", 2: "根本原因を...", 1: "問題の表面..." } },
+            { no: 72, category: '店長', subCategory: '問題解決スキル', item: '効果的な解決策の選択と実行', axis: '店長スキル', max: 4, score: null, desc: '問題の原因を...', validScores: [4, 3, 2, 1], criteria: { 4: "さまざまな...", 3: "効果的で...", 2: "いくつかの...", 1: "解決策の選定..." } },
+            { no: 73, category: '店長', subCategory: '問題解決スキル', item: '柔軟な対応力', axis: '店長スキル', max: 4, score: null, desc: '予期せぬ変化や...', validScores: [4, 3, 2, 1], criteria: { 4: "どんな予期せぬ...", 3: "新たな状況...", 2: "ある程度は...", 1: "新たな状況に..." } },
+            { no: 74, category: '店長', subCategory: '個人の属性', item: 'ストレス管理能力', axis: '店長スキル', max: 4, score: null, desc: '厳しい状況や...', validScores: [4, 3, 2, 1], criteria: { 4: "どんなに厳しい...", 3: "ストレスが...", 2: "ストレスに対して...", 1: "ストレスの多い..." } },
+            { no: 75, category: '店長', subCategory: '個人の属性', item: '高い倫理観と信頼性', axis: '店長スキル', max: 4, score: null, desc: 'どの程度、組織倫理や...', validScores: [4, 3, 2, 1], criteria: { 4: "高い倫理観...", 3: "組織倫理と...", 2: "組織倫理や...", 1: "組織倫理や..." } },
+            { no: 76, category: '店長', subCategory: '個人の属性', item: '自己モチベーション', axis: '店長スキル', max: 4, score: null, desc: '外部からの刺激や...', validScores: [4, 3, 2, 1], criteria: { 4: "高い自己...", 3: "一貫して...", 2: "自己モチベーション...", 1: "自分から動く..." } },
+            // --- 店長管理 ---
+            { no: 77, category: '店長', subCategory: '管理責任・コンプライアンス', item: '開閉店処理', axis: '店長スキル', max: 4, score: null, desc: '過失による...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "違反・発生" } },
+            { no: 78, category: '店長', subCategory: '管理責任・コンプライアンス', item: '金銭管理', axis: '店長スキル', max: 4, score: null, desc: '過失によって...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "事故・管理不足発生" } },
+            { no: 79, category: '店長', subCategory: '管理責任・コンプライアンス', item: '鍵・入館証管理', axis: '店長スキル', max: 4, score: null, desc: '過失による...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "紛失・管理不足発生" } },
+            { no: 80, category: '店長', subCategory: '管理責任・コンプライアンス', item: 'スタッフ勤怠・交通費承認管理', axis: '店長スキル', max: 4, score: null, desc: 'スタッフの...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "管理不足発生" } },
+            { no: 81, category: '店長', subCategory: '管理責任・コンプライアンス', item: '耳切事故未然防止指導', axis: '店長スキル', max: 4, score: null, desc: '未然防止...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "指導不足・事故発生" } },
+            { no: 82, category: '店長', subCategory: '管理責任・コンプライアンス', item: '施設内ルール遵守', axis: '店長スキル', max: 4, score: null, desc: '施設内規則の...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "違反・指摘発生" } },
+            { no: 83, category: '店長', subCategory: '管理責任・コンプライアンス', item: '店舗設備管理', axis: '店長スキル', max: 4, score: null, desc: '管理を怠り...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "支障・管理不足発生" } },
+            { no: 84, category: '店長', subCategory: '管理責任・コンプライアンス', item: '5S・クリリネス管理', axis: '店長スキル', max: 4, score: null, desc: '店舗の清潔さを...', validScores: [4, 0], criteria: { 4: "遵守・問題なし", 0: "不十分・問題発生" } }
+        ];
+
+        // --- COMPONENTS ---
+
+        // PrintChartSection (Fixed size chart for printing)
+        const PrintChartSection = ({ items, performanceData, performanceScore, type, comparisonItems, comparisonPerformanceScore }) => {
+            const radarData = useMemo(() => {
+                return AXES.map((axis) => {
+                    const data = { subject: axis, fullMark: 100 };
+
+                    // Current Data (A)
+                    if (axis === '実績') {
+                        data.A = Math.min(100, Math.round((performanceScore / 50) * 100));
+                    } else {
+                        const axisItems = items.filter((i) => i.axis === axis && i.max > 0);
+                        if (axisItems.length === 0) data.A = 0;
+                        else {
+                            const currentSum = axisItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                            const maxSum = axisItems.reduce((sum, i) => sum + i.max, 0);
+                            data.A = maxSum === 0 ? 0 : Math.round((currentSum / maxSum) * 100);
+                        }
+                    }
+
+                    // Comparison Data (B)
+                    if (comparisonItems) {
+                        if (axis === '実績') {
+                            data.B = Math.min(100, Math.round(((comparisonPerformanceScore || 0) / 50) * 100));
+                        } else {
+                            const compAxisItems = comparisonItems.filter((i) => i.axis === axis && i.max > 0);
+                            if (compAxisItems.length === 0) data.B = 0;
+                            else {
+                                const compSum = compAxisItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                                const maxSum = compAxisItems.reduce((sum, i) => sum + i.max, 0);
+                                data.B = maxSum === 0 ? 0 : Math.round((compSum / maxSum) * 100);
+                            }
+                        }
+                    }
+                    return data;
+                });
+            }, [items, performanceScore, comparisonItems, comparisonPerformanceScore]);
+
+            const lineChartData = useMemo(() => {
+                const monthlyGoal = performanceData.goalCuts > 0 ? Math.round(performanceData.goalCuts / 12) : 0;
+                return MONTH_LABELS.map((label, index) => ({
+                    name: label,
+                    cuts: performanceData.monthlyCuts[index] > 0 ? performanceData.monthlyCuts[index] : null,
+                    goal: monthlyGoal
+                }));
+            }, [performanceData]);
+
+            const managerRadarData = useMemo(() => {
+                return MANAGER_AXES.map((subCat) => {
+                    const subCatItems = items.filter((i) => i.category === '店長' && i.subCategory === subCat && i.max > 0);
+                    if (subCatItems.length === 0) {
+                        return { subject: subCat, A: 0, fullMark: 100 };
+                    }
+                    const currentSum = subCatItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                    const maxSum = subCatItems.reduce((sum, i) => sum + i.max, 0);
+                    const percentage = maxSum === 0 ? 0 : Math.round((currentSum / maxSum) * 100);
+                    const data = { subject: subCat, A: percentage, fullMark: 100 };
+
+                    // Comparison Data
+                    if (comparisonItems) {
+                        const compSubCatItems = comparisonItems.filter((i) => i.category === '店長' && i.subCategory === subCat && i.max > 0);
+                        if (compSubCatItems.length === 0) data.B = 0;
+                        else {
+                            const compSum = compSubCatItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                            const compMax = compSubCatItems.reduce((sum, i) => sum + i.max, 0);
+                            data.B = compMax === 0 ? 0 : Math.round((compSum / compMax) * 100);
+                        }
+                    }
+                    return data;
+                });
+            }, [items, comparisonItems]);
+
+            if (type === 'radar') {
+                return (
+                    <RadarChart width={300} height={120} cx="50%" cy="50%" outerRadius="60%" data={radarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#4b5563', fontSize: 6, fontWeight: 'bold' }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                        <Radar name="今回" dataKey="A" stroke="#3b82f6" strokeWidth={2} fill="#3b82f6" fillOpacity={0.4} isAnimationActive={false} />
+                        {comparisonItems && <Radar name="前回" dataKey="B" stroke="#ef4444" strokeWidth={2} fill="#ef4444" fillOpacity={0.1} strokeDasharray="3 3" isAnimationActive={false} />}
+                    </RadarChart>
+                );
+
+            }
+            if (type === 'manager-radar') {
+                return (
+                    <RadarChart width={300} height={120} cx="50%" cy="50%" outerRadius="55%" data={managerRadarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#4b5563', fontSize: 5, fontWeight: 'bold' }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                        <Radar name="店長スキル" dataKey="A" stroke="#8b5cf6" strokeWidth={2} fill="#8b5cf6" fillOpacity={0.4} isAnimationActive={false} />
+                        {comparisonItems && <Radar name="前回" dataKey="B" stroke="#ef4444" strokeWidth={2} fill="#ef4444" fillOpacity={0.1} strokeDasharray="3 3" isAnimationActive={false} />}
+                    </RadarChart>
+                );
+            }
+            return (
+                <LineChart width={300} height={120} data={lineChartData} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="name" tick={{ fontSize: 8 }} axisLine={false} tickLine={false} interval={0} />
+                    <YAxis tick={{ fontSize: 8 }} axisLine={false} tickLine={false} width={25} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '7px', paddingTop: '0px' }} />
+                    <Line type="monotone" dataKey="cuts" name="実績" stroke="#3b82f6" strokeWidth={2} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="goal" name="目標" stroke="#9ca3af" strokeDasharray="4 4" dot={false} strokeWidth={1} isAnimationActive={false} />
+                </LineChart>
+            );
+        };
+
+        // EvaluationCard
+        const EvaluationCard = ({ item, onUpdate, onUpdateMemo, onUpdateIncidents, readOnly }) => {
+            const [isDetailOpen, setIsDetailOpen] = useState(false);
+            const [isMemoOpen, setIsMemoOpen] = useState(!!item.memo);
+
+            // Incident State
+            const [newIncidentDesc, setNewIncidentDesc] = useState('');
+            const [newIncidentDate, setNewIncidentDate] = useState(new Date().toISOString().split('T')[0]);
+            const [newIncidentDeduction, setNewIncidentDeduction] = useState(0);
+            const [newIncidentImprovement, setNewIncidentImprovement] = useState(0);
+            const [isAddingIncident, setIsAddingIncident] = useState(false);
+
+            const isNegative = item.max < 0 && !item.validScores;
+            const isClaimOrAccident = item.subCategory === 'クレーム' || item.subCategory === '事故';
+
+            const availableScores = item.validScores
+                ? item.validScores
+                : item.max < 0
+                    ? [0, -1, -2, -3, -4, -5, -10, -15].filter(s => s >= item.max)
+                    : Array.from({ length: item.max + 1 }, (_, n) => n).reverse();
+
+            const handleAddIncident = () => {
+                if (!newIncidentDesc.trim()) {
+                    alert("内容を入力してください");
+                    return;
+                }
+                const newInc = {
+                    id: Date.now().toString(),
+                    date: newIncidentDate,
+                    desc: newIncidentDesc,
+                    deduction: newIncidentDeduction,
+                    improvement: newIncidentImprovement
+                };
+                const updatedIncidents = [...(item.incidents || []), newInc];
+                onUpdateIncidents(item.no, updatedIncidents);
+                setNewIncidentDesc('');
+                setNewIncidentDeduction(0);
+                setNewIncidentImprovement(0);
+                setNewIncidentDate(new Date().toISOString().split('T')[0]);
+                setIsAddingIncident(false);
+            };
+
+            const handleDeleteIncident = (id) => {
+                const updatedIncidents = (item.incidents || []).filter(inc => inc.id !== id);
+                onUpdateIncidents(item.no, updatedIncidents);
+            };
+
+            const claimDeductionOpts = useMemo(() => {
+                if (item.subCategory === 'クレーム' && item.category === '接客') return CLAIM_DEDUCTIONS.service;
+                if (item.subCategory === 'クレーム' && item.category === '技術') return CLAIM_DEDUCTIONS.tech;
+                if (item.subCategory === '事故') return CLAIM_DEDUCTIONS.accident;
+                return [];
+            }, [item]);
+
+            const getDeductionLabel = (score, opts) => {
+                if (score === 0) return opts.find(o => o.score === 0);
+                for (const opt of opts) {
+                    if (opt.score === 0) continue;
+                    const match = opt.label.match(/\((-?\d+)~(-?\d+)\)/);
+                    if (match) {
+                        const start = parseInt(match[1], 10);
+                        const end = parseInt(match[2], 10);
+                        const maxVal = Math.max(start, end);
+                        const minVal = Math.min(start, end);
+                        if (score <= maxVal && score >= minVal) return opt;
+                    } else {
+                        if (score === opt.score) return opt;
+                    }
+                }
+                // Fallback for accident or explicit single values
+                // Just find exact match or assume it maps to one of the buckets?
+                // For accident: 0, -10. If slider is -5?
+                // Accident desc says "事故発生 (-10)". Maybe slider should snap?
+                // But user asked for slider.
+                // Let's fallback to nearest check if range parsing fails or no match
+                return opts.reduce((prev, curr) => Math.abs(curr.score - score) < Math.abs(prev.score - score) ? curr : prev, opts[0]);
+            };
+
+            const currentDeductionOpt = useMemo(() => {
+                return getDeductionLabel(newIncidentDeduction, claimDeductionOpts);
+            }, [newIncidentDeduction, claimDeductionOpts]);
+
+            return (
+                <div className={`mb-6 p-4 bg-white border rounded-xl shadow-sm print-break-inside-avoid ${item.score === null && !isClaimOrAccident ? 'border-l-4 border-l-red-500 border-gray-200' : 'border-gray-200'}`}>
+                    <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                            <span className="bg-blue-100 text-blue-900 text-xs font-bold px-2 py-1 rounded-full">
+                                No.{item.no}
+                            </span>
+                            <span className="text-xs font-medium text-gray-500 truncate">{item.subCategory}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsMemoOpen(!isMemoOpen)}
+                            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border transition-all shadow-sm ${isMemoOpen ? 'bg-indigo-50 text-indigo-700 border-indigo-200 font-bold' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400'}`}
+                        >
+                            <MessageSquare size={14} /> {isMemoOpen ? 'メモを隠す' : '一言メモ'}
+                        </button>
+                    </div>
+
+                    <h3 className="font-bold text-gray-900 text-lg mb-2 leading-tight">{item.item}</h3>
+
+                    <div className="text-sm text-gray-800 font-medium mb-3 bg-blue-50 p-2.5 rounded border border-blue-100 leading-relaxed">
+                        {item.desc}
+                    </div>
+
+                    {isMemoOpen && (
+                        <div className="mb-4">
+                            <textarea
+                                value={item.memo || ''}
+                                onChange={(e) => onUpdateMemo(item.no, e.target.value)}
+                                placeholder={readOnly ? "メモなし" : "メモを入力..."}
+                                className="w-full p-2 text-sm border border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all bg-indigo-50/30 disabled:bg-gray-100 disabled:text-gray-500"
+                                rows={2}
+                                disabled={readOnly}
+                            />
+
+                        </div>
+                    )}
+
+                    {item.pointDesc && (
+                        <div className="mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setIsDetailOpen(!isDetailOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${isDetailOpen
+                                    ? 'bg-blue-50 text-blue-900 border border-blue-200'
+                                    : 'bg-white text-gray-500 border-2 border-dashed border-gray-300 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    {isDetailOpen ? <MinusCircle size={18} className="text-blue-500" /> : <PlusCircle size={18} />}
+                                    <span>評価ポイントを{isDetailOpen ? '隠す' : '見る'}</span>
+                                </div>
+                                {isDetailOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </button>
+
+                            {isDetailOpen && (
+                                <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 leading-relaxed animate-in fade-in slide-in-from-top-1 shadow-inner">
+                                    <div className="flex gap-2">
+                                        <div className="shrink-0 w-1 bg-blue-400 rounded-full my-1"></div>
+                                        <div>{item.pointDesc}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="space-y-3">
+                        {isClaimOrAccident ? (
+                            <div className="w-full">
+                                <div className="flex justify-between items-end mb-2">
+                                    <p className="text-xs text-red-600 font-bold">
+                                        {item.item}の案件記録 (減点 + 改善点)
+                                    </p>
+                                    <p className="text-xl font-bold font-mono">
+                                        合計: <span className={item.score < 0 ? "text-red-600" : "text-gray-400"}>{item.score ?? 0}</span>
+                                        <span className="text-xs text-gray-400 font-normal ml-1">点</span>
+                                    </p>
+                                </div>
+
+                                {/* Incident List */}
+                                {item.incidents && item.incidents.length > 0 ? (
+                                    <div className="space-y-2 mb-3">
+                                        {item.incidents.map((inc) => (
+                                            <div key={inc.id} className="p-3 bg-gray-50 border border-gray-200 rounded-lg relative group">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <div className="text-sm font-bold text-gray-800 pr-6">
+                                                        <span className="text-xs text-gray-500 font-normal mr-2 block sm:inline">{inc.date}</span>
+                                                        {inc.desc}
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <span className="text-red-600 font-bold mr-2">{inc.deduction}点</span>
+                                                        <span className="text-blue-600 font-bold">+{inc.improvement}点</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-gray-500 text-right">
+                                                    計: {Math.min(0, inc.deduction + inc.improvement)}点
+                                                </div>
+                                                {readOnly ? null : (
+                                                    <button
+                                                        onClick={() => handleDeleteIncident(inc.id)}
+                                                        className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4 bg-gray-50 border border-dashed border-gray-300 rounded text-gray-400 text-xs mb-3">
+                                        案件なし (0点)
+                                    </div>
+                                )}
+
+                                {/* Add Incident Form */}
+                                {isAddingIncident ? (
+                                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg animate-in fade-in zoom-in-95">
+                                        <h4 className="text-xs font-bold text-blue-800 mb-2">新規案件の追加</h4>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-600 mb-1">発生日</label>
+                                                <input
+                                                    type="date"
+                                                    value={newIncidentDate}
+                                                    onChange={(e) => setNewIncidentDate(e.target.value)}
+                                                    className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none mb-3"
+                                                />
+                                                <label className="block text-xs font-bold text-gray-600 mb-1">内容メモ</label>
+                                                <input
+                                                    type="text"
+                                                    value={newIncidentDesc}
+                                                    onChange={(e) => setNewIncidentDesc(e.target.value)}
+                                                    className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    placeholder="例: カット手順の誤り、接客時の言葉遣いなど"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-600 mb-1">減点対象 (スライダー調整)</label>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="range"
+                                                        min={item.category === '技術' ? -10 : -15}
+                                                        max={0}
+                                                        step={1}
+                                                        value={newIncidentDeduction}
+                                                        onChange={(e) => setNewIncidentDeduction(parseInt(e.target.value, 10))}
+                                                        className="w-full h-10 cursor-pointer accent-red-600 touch-pan-x"
+                                                    />
+                                                    <div className="text-right font-bold text-red-600 text-xl w-12 shrink-0 tabular-nums">
+                                                        {newIncidentDeduction}
+                                                    </div>
+                                                </div>
+                                                <div className="p-2 bg-red-50 border border-red-100 rounded text-gray-700 text-xs mt-1">
+                                                    {currentDeductionOpt ? (
+                                                        <div>
+                                                            <span className="font-bold block mb-0.5">{currentDeductionOpt.label}</span>
+                                                            <span className="text-gray-500">{currentDeductionOpt.desc}</span>
+                                                        </div>
+                                                    ) : "該当なし"}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-600 mb-1">改善点 (最大+5点)</label>
+                                                <div className="grid grid-cols-1 gap-1">
+                                                    {IMPROVEMENT_OPTS.map(opt => (
+                                                        <button
+                                                            key={opt.score}
+                                                            type="button"
+                                                            onClick={() => setNewIncidentImprovement(opt.score)}
+                                                            className={`text-left text-xs p-2 rounded border flex justify-between items-center transition-colors ${newIncidentImprovement === opt.score ? 'bg-blue-100 border-blue-400 text-blue-900 font-bold' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                                                        >
+                                                            <span>{opt.label}</span>
+                                                            <span className="text-[10px] text-gray-500 truncate ml-2">{opt.desc}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2 justify-end mt-2">
+                                                <button onClick={() => setIsAddingIncident(false)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-200 rounded">キャンセル</button>
+                                                <button onClick={handleAddIncident} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 font-bold shadow-sm">確定</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsAddingIncident(true)}
+                                        disabled={readOnly}
+                                        className={`w-full py-2 bg-white border border-dashed border-gray-400 text-gray-500 rounded transition-all text-xs font-bold flex items-center justify-center gap-2 ${readOnly ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-400'}`}
+                                    >
+                                        <PlusCircle size={16} /> 案件を追加する
+                                    </button>
+                                )}
+                            </div>
+                        ) : isNegative ? (
+                            <div className="w-full">
+                                <p className="text-xs text-red-600 font-bold mb-2">
+                                    減点項目 ({item.max} 〜 0)
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="range"
+                                        min={item.max}
+                                        max={0}
+                                        step={1}
+                                        value={item.score ?? 0}
+                                        onChange={(e) => onUpdate(item.no, parseInt(e.target.value, 10))}
+                                        className="w-full h-10 cursor-pointer accent-red-600 touch-pan-x disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={readOnly}
+                                    />
+                                    <div className="text-right font-bold text-red-600 text-2xl w-12 shrink-0 tabular-nums">
+                                        {item.score ?? 0}
+                                    </div>
+                                </div>
+                                <div className="mt-2 p-2 bg-red-50 border border-red-100 rounded text-gray-700 text-xs">
+                                    {item.criteria && item.score !== null && item.criteria[item.score]
+                                        ? item.criteria[item.score]
+                                        : item.score === 0 || item.score === null ? "減点なし" : "減点対象"}
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex flex-row gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                                    {availableScores.map((score) => {
+                                        const isSelected = item.score === score;
+
+                                        let colorClass = 'border-gray-200 hover:bg-gray-50';
+                                        let selectedClass = 'bg-blue-50 border-blue-500 ring-1 ring-blue-500';
+                                        let badgeClass = 'bg-gray-100 text-gray-600';
+
+                                        if (score > 0) {
+                                            if (score >= 3) {
+                                                selectedClass = 'bg-blue-50 border-blue-600 ring-2 ring-blue-600';
+                                                badgeClass = isSelected ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800';
+                                            } else if (score === 2) {
+                                                selectedClass = 'bg-sky-50 border-sky-500 ring-2 ring-sky-500';
+                                                badgeClass = isSelected ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-800';
+                                            } else {
+                                                selectedClass = 'bg-orange-50 border-orange-500 ring-2 ring-orange-500';
+                                                badgeClass = isSelected ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-800';
+                                            }
+                                        } else if (score < 0 || (score === 0 && item.max > 0)) {
+                                            selectedClass = 'bg-red-50 border-red-500 ring-2 ring-red-500';
+                                            badgeClass = isSelected ? 'bg-red-500 text-white' : 'bg-red-100 text-red-800';
+                                        }
+
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={score}
+                                                onClick={() => !readOnly && onUpdate(item.no, score)}
+                                                disabled={readOnly}
+                                                className={`flex-1 min-w-[3.5rem] p-2 rounded-lg border-2 transition-all duration-100 flex flex-col items-center justify-center gap-1 ${!readOnly && 'active:scale-95'} ${isSelected ? selectedClass : colorClass} ${readOnly ? 'opacity-80 cursor-default' : ''}`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg ${badgeClass}`}>
+                                                    {score}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className={`mt-2 p-2 rounded-lg border min-h-[2.5rem] transition-all duration-300 ${item.score !== null ? 'bg-gray-50 border-gray-200' : 'bg-gray-50/50 border-dashed border-gray-200'}`}>
+                                    <p className={`text-xs leading-relaxed ${item.score !== null ? 'text-gray-800 font-medium' : 'text-gray-400 text-center italic'}`}>
+                                        {item.score !== null
+                                            ? (item.criteria?.[item.score] || (item.score === 0 ? "不十分 / なし" : "評価基準なし"))
+                                            : "点数を選択してください"}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // ChartSection (Display Mode)
+        const ChartSection = ({ items, performanceData, performanceScore, comparisonItems, comparisonPerformanceScore }) => {
+            const radarData = useMemo(() => {
+                return AXES.map((axis) => {
+                    // Current Data (A)
+                    let percentageA = 0;
+                    if (axis === '実績') {
+                        percentageA = Math.min(100, Math.round((performanceScore / 50) * 100));
+                    } else {
+                        const axisItems = items.filter((i) => i.axis === axis && i.max > 0);
+                        if (axisItems.length > 0) {
+                            const currentSum = axisItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                            const maxSum = axisItems.reduce((sum, i) => sum + i.max, 0);
+                            percentageA = maxSum === 0 ? 0 : Math.round((currentSum / maxSum) * 100);
+                        }
+                    }
+
+                    // Comparison Data (B)
+                    let percentageB = 0;
+                    if (comparisonItems) {
+                        if (axis === '実績') {
+                            percentageB = Math.min(100, Math.round(((comparisonPerformanceScore || 0) / 50) * 100));
+                        } else {
+                            const axisItems = comparisonItems.filter((i) => i.axis === axis && i.max > 0);
+                            if (axisItems.length > 0) {
+                                const currentSum = axisItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                                const maxSum = axisItems.reduce((sum, i) => sum + i.max, 0);
+                                percentageB = maxSum === 0 ? 0 : Math.round((currentSum / maxSum) * 100);
+                            }
+                        }
+                    }
+
+                    return { subject: axis, A: percentageA, B: percentageB, fullMark: 100 };
+                });
+            }, [items, performanceScore, comparisonItems, comparisonPerformanceScore]);
+
+            const lineChartData = useMemo(() => {
+                const monthlyGoal = performanceData.goalCuts > 0 ? Math.round(performanceData.goalCuts / 12) : 0;
+                return MONTH_LABELS.map((label, index) => ({
+                    name: label,
+                    cuts: performanceData.monthlyCuts[index] > 0 ? performanceData.monthlyCuts[index] : null,
+                    goal: monthlyGoal
+                }));
+            }, [performanceData]);
+
+
+            const managerRadarData = useMemo(() => {
+                return MANAGER_AXES.map((subCat) => {
+                    const subCatItems = items.filter((i) => i.category === '店長' && i.subCategory === subCat && i.max > 0);
+                    if (subCatItems.length === 0) {
+                        return { subject: subCat, A: 0, fullMark: 100 };
+                    }
+                    const currentSum = subCatItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                    const maxSum = subCatItems.reduce((sum, i) => sum + i.max, 0);
+                    const percentage = maxSum === 0 ? 0 : Math.round((currentSum / maxSum) * 100);
+                    const data = { subject: subCat, A: percentage, fullMark: 100 };
+
+                    // Comparison Data
+                    if (comparisonItems) {
+                        const compSubCatItems = comparisonItems.filter((i) => i.category === '店長' && i.subCategory === subCat && i.max > 0);
+                        if (compSubCatItems.length === 0) data.B = 0;
+                        else {
+                            const compSum = compSubCatItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                            const compMax = compSubCatItems.reduce((sum, i) => sum + i.max, 0);
+                            data.B = compMax === 0 ? 0 : Math.round((compSum / compMax) * 100);
+                        }
+                    }
+                    return data;
+                });
+            }, [items, comparisonItems]);
+
+            const hasManagerItems = useMemo(() => items.some(i => i.category === '店長' && i.score !== null), [items]);
+
+            return (
+                <div className={`grid grid-cols-1 ${hasManagerItems ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 w-full print-break-inside-avoid`}>
+                    <div className="bg-white p-2 rounded-lg h-[300px] relative border border-gray-100">
+                        <h3 className="absolute top-2 left-4 text-xs font-bold text-gray-400">スタッフ評価</h3>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
+                                <PolarGrid />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#111827', fontSize: 10, fontWeight: 'bold' }} />
+                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                <Radar
+                                    name="今回"
+                                    dataKey="A"
+                                    stroke="#3b82f6"
+                                    strokeWidth={2}
+                                    fill="#3b82f6"
+                                    fillOpacity={0.4}
+                                />
+                                {comparisonItems && (
+                                    <Radar
+                                        name="比較"
+                                        dataKey="B"
+                                        stroke="#ef4444"
+                                        strokeWidth={2}
+                                        fill="#ef4444"
+                                        fillOpacity={0.1}
+                                        strokeDasharray="4 4"
+                                    />
+                                )}
+                                <Legend />
+                            </RadarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    {hasManagerItems && (
+                        <div className="bg-white p-2 rounded-lg h-[300px] relative border border-gray-100">
+                            <h3 className="absolute top-2 left-4 text-xs font-bold text-gray-400">店長スキル評価</h3>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="60%" data={managerRadarData}>
+                                    <PolarGrid />
+                                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#111827', fontSize: 8, fontWeight: 'bold' }} />
+                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                    <Radar
+                                        name="店長スキル"
+                                        dataKey="A"
+                                        stroke="#8b5cf6"
+                                        strokeWidth={2}
+                                        fill="#8b5cf6"
+                                        fillOpacity={0.4}
+                                    />
+                                    {comparisonItems && (
+                                        <Radar
+                                            name="前回"
+                                            dataKey="B"
+                                            stroke="#ef4444"
+                                            strokeWidth={2}
+                                            fill="#ef4444"
+                                            fillOpacity={0.1}
+                                            strokeDasharray="4 4"
+                                        />
+                                    )}
+                                </RadarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                    <div className="bg-white p-2 rounded-lg h-[300px] relative border border-gray-100">
+                        <h3 className="absolute top-2 left-4 text-xs font-bold text-gray-400">月別カット人数推移</h3>
+                        <div className="h-full pt-6">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={lineChartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                    <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} width={35} />
+                                    <Legend iconType="circle" wrapperStyle={{ fontSize: '9px', paddingTop: '5px' }} />
+                                    <Line type="monotone" dataKey="cuts" name="実績" stroke="#3b82f6" strokeWidth={3} dot={{ r: 3, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} connectNulls />
+                                    <Line type="monotone" dataKey="goal" name="月平均目標" stroke="#9ca3af" strokeDasharray="5 5" dot={false} strokeWidth={1} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            );
+
+        };
+
+        // --- HELPER FUNCTIONS ---
+        const calculatePerformanceMetrics = (monthlyCuts, excludedFromAverage) => {
+            const safeCuts = monthlyCuts || new Array(12).fill(0);
+            const safeExcluded = excludedFromAverage || new Array(12).fill(false);
+
+            // 1. Current Total (Sum of ALL inputs, regardless of exclusion)
+            const currentTotal = safeCuts.reduce((a, b) => a + (b || 0), 0);
+
+            // 2. Average Calculation (Inputs > 0 AND Not Excluded)
+            const validMonths = safeCuts.map((v, i) => ({ v, i }))
+                .filter(item => item.v > 0 && !safeExcluded[item.i]);
+
+            const validSum = validMonths.reduce((a, item) => a + item.v, 0);
+            const validCount = validMonths.length;
+            const average = validCount > 0 ? Math.round(validSum / validCount) : 0;
+
+            // 3. Yearly Forecast
+            // Fill '0' months with 'average'.
+            const emptyCount = safeCuts.filter(v => v === 0).length;
+            const predictedTotal = currentTotal + (average * emptyCount);
+
+            return { currentTotal, average, predictedTotal, emptyCount };
+        };
+
+        // PerformanceEvaluation
+        const PerformanceEvaluation = ({ data, onChange, onScoreUpdate, readOnly }) => {
+            const monthlyCuts = data.monthlyCuts && data.monthlyCuts.length === 12
+                ? data.monthlyCuts
+                : new Array(12).fill(0);
+
+            const excludedFromAverage = data.excludedFromAverage && data.excludedFromAverage.length === 12
+                ? data.excludedFromAverage
+                : new Array(12).fill(false);
+
+            const { currentTotal, average, predictedTotal } = calculatePerformanceMetrics(monthlyCuts, excludedFromAverage);
+
+            const calculateCutScore = (cuts) => {
+                if (cuts < 6000) return 5;
+                const base = 15;
+                const extra = Math.floor((cuts - 6000) / 100);
+                const total = base + extra;
+                return Math.min(total, 50);
+            };
+
+            const predictionScore = calculateCutScore(predictedTotal);
+            // Calculate goal score based on goal cuts automatically
+            const goalScoreCalculated = calculateCutScore(data.goalCuts);
+
+            useEffect(() => {
+                onScoreUpdate(predictionScore);
+            }, [predictionScore, onScoreUpdate]);
+
+            const handleMonthlyChange = (index, val) => {
+                const newCuts = [...monthlyCuts];
+                newCuts[index] = val;
+                onChange({ ...data, monthlyCuts: newCuts });
+            };
+
+            const toggleExclusion = (index) => {
+                const newExcluded = [...excludedFromAverage];
+                newExcluded[index] = !newExcluded[index];
+                onChange({ ...data, excludedFromAverage: newExcluded });
+            };
+
+            const handleInputChange = (field, value) => {
+                onChange({ ...data, [field]: value });
+            };
+
+            const monthDays = 30.5;
+            const workDays = monthDays - (data.monthlyHolidays || 0);
+            const monthlyAvgCuts = average > 0 ? average : (data.goalCuts / 12);
+            const cutsPerDay = workDays > 0 ? (monthlyAvgCuts / workDays).toFixed(1) : "0";
+
+            return (
+                <div className="space-y-4 sm:space-y-6 print-break-inside-avoid">
+                    <div className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 className="font-bold text-base sm:text-lg text-blue-900 mb-4 flex items-center gap-2">
+                            📊 年間カット人数評価
+                            <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded">実績評価</span>
+                        </h3>
+
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 mb-6 no-print">
+                            {MONTHS.map((m) => {
+                                const isExcluded = excludedFromAverage[m.index];
+                                const hasValue = monthlyCuts[m.index] > 0;
+
+                                return (
+                                    <div key={m.index} className="flex flex-col bg-gray-50 p-1.5 sm:p-2 rounded border border-gray-100">
+                                        <label className="text-xs text-gray-500 text-center mb-1 font-bold">{m.label}</label>
+                                        <input
+                                            type="number"
+                                            pattern="\d*"
+                                            value={monthlyCuts[m.index] || ''}
+                                            onChange={(e) => handleMonthlyChange(m.index, parseInt(e.target.value) || 0)}
+                                            placeholder={hasValue ? "" : `${average}`}
+                                            className={`p-2 border rounded text-center outline-none focus:ring-2 focus:ring-blue-400 w-full mb-1 text-base ${hasValue ? 'bg-white border-gray-300 font-bold text-gray-900' : 'bg-gray-100 border-gray-200 text-gray-400'}`}
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleExclusion(m.index)}
+                                            className={`flex items-center justify-center gap-1 text-[10px] py-1 px-1 rounded transition-colors ${!isExcluded ? 'bg-blue-100 text-blue-700 font-bold border border-blue-200' : 'bg-gray-200 text-gray-500 border border-gray-300'}`}
+                                        >
+                                            {!isExcluded ? <CheckSquare size={10} /> : <Square size={10} />}
+                                            {isExcluded ? '除外' : '平均計算'}
+                                        </button>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+                            <div>
+                                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">目標年間カット人数</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        pattern="\d*"
+                                        value={data.goalCuts || ''}
+                                        onChange={(e) => handleInputChange('goalCuts', parseInt(e.target.value) || 0)}
+                                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-right font-mono text-lg"
+                                        placeholder="7000"
+                                    />
+                                    <span className="text-gray-600 text-sm">人</span>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
+                                    <span>目標スコア:</span>
+                                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded min-w-[2rem] text-center inline-block">{goalScoreCalculated}</span>
+                                    <span>点 (自動算出)</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                                <div className="text-xs text-gray-500 mb-1">現在の実績合計 (入力分)</div>
+                                <div className="text-xl font-bold text-gray-800 text-right">{currentTotal.toLocaleString()} 人</div>
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                                    <span className="text-xs text-gray-500">算出用平均</span>
+                                    <span className="text-sm font-bold text-gray-700">{average.toLocaleString()} 人/月</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                                <div className="text-xs text-blue-800 mb-1 font-bold">年間着地予想 (実数+仮定)</div>
+                                <div className="text-2xl font-bold text-blue-900 text-right">{Math.round(predictedTotal).toLocaleString()} 人</div>
+                                <div className="flex justify-between items-center mt-2 border-t border-blue-200 pt-2">
+                                    <span className="text-xs font-bold text-blue-800">予想スコア</span>
+                                    <span className="text-xl font-bold text-red-600">{predictionScore} 点</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm no-print">
+                        <h3 className="font-bold text-base sm:text-lg text-gray-700 mb-4 flex items-center gap-2">
+                            <Calculator size={18} /> 勤務・生産性試算
+                        </h3>
+                        <div className="flex items-end gap-4 mb-4">
+                            <div className="flex-grow">
+                                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">月契約公休数</label>
+                                <input
+                                    type="number"
+                                    pattern="\d*"
+                                    value={data.monthlyHolidays || ''}
+                                    onChange={(e) => handleInputChange('monthlyHolidays', parseInt(e.target.value) || 0)}
+                                    className="w-full p-2 border border-gray-300 rounded text-right text-lg"
+                                    placeholder="例: 8"
+                                />
+                            </div>
+                            <div className="pb-2 text-gray-400 text-xs">
+                                ※月30.5日で計算
+                            </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-gray-100 grid grid-cols-2 gap-3">
+                            <div className="bg-gray-50 p-2 sm:p-3 rounded">
+                                <div className="text-xs text-gray-500">実働日数 (月)</div>
+                                <div className="text-lg font-bold text-gray-800">{workDays}日</div>
+                            </div>
+                            <div className="bg-green-50 p-2 sm:p-3 rounded border border-green-100">
+                                <div className="text-xs text-green-800">1日あたり平均(予)</div>
+                                <div className="text-lg font-bold text-green-900">{cutsPerDay}人/日</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ScoreDashboard
+        const ManagerSubCard = ({ label, score }) => (
+            <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
+                <span className="text-[10px] font-bold text-gray-400 mb-1 text-center leading-tight">{label}</span>
+                <span className="text-xl font-bold text-gray-700">{score}</span>
+            </div>
+        );
+
+        const ScoreDashboard = ({ items, performanceScore, performanceData, isManagerUnlocked }) => {
+            const getScore = (i) => i.score ?? 0;
+
+            // Calculate category scores
+            const relationshipScore = items.filter(i => i.category === '関係性').reduce((sum, i) => sum + getScore(i), 0);
+            const customerServiceScore = items.filter(i => i.category === '接客').reduce((sum, i) => sum + getScore(i), 0);
+            const technicalScore = items.filter(i => i.category === '技術').reduce((sum, i) => sum + getScore(i), 0);
+
+            // Total score calculation (stylist only)
+            const totalScore200 = relationshipScore + customerServiceScore + technicalScore + performanceScore;
+
+            const managerItems = items.filter(i => i.category === '店長');
+            const managerTotal = managerItems.reduce((sum, i) => sum + getScore(i), 0);
+
+            // Group manager scores for display
+            const mgrOps = managerItems.filter(i => i.subCategory === '運営管理スキル').reduce((sum, i) => sum + getScore(i), 0);
+            const mgrCust = managerItems.filter(i => i.subCategory === '顧客サービススキル').reduce((sum, i) => sum + getScore(i), 0);
+            const mgrTeam = managerItems.filter(i => i.subCategory === 'チームマネジメントスキル').reduce((sum, i) => sum + getScore(i), 0);
+            const mgrStrat = managerItems.filter(i => i.subCategory === '戦略思考スキル').reduce((sum, i) => sum + getScore(i), 0);
+            const mgrProb = managerItems.filter(i => i.subCategory === '問題解決スキル').reduce((sum, i) => sum + getScore(i), 0);
+            const mgrPersonal = managerItems.filter(i => i.subCategory === '個人の属性').reduce((sum, i) => sum + getScore(i), 0);
+            const mgrComp = managerItems.filter(i => i.subCategory === '管理責任・コンプライアンス').reduce((sum, i) => sum + getScore(i), 0);
+
+            const mgrCol1 = mgrOps + mgrCust; // 運営・顧客
+            const mgrCol2 = mgrTeam + mgrStrat; // チーム・戦略
+            const mgrCol3 = mgrProb; // 問題解決
+            const mgrCol4 = mgrPersonal + mgrComp; // その他(行動・コンプラ)
+
+            return (
+                <div className="w-full max-w-4xl mx-auto space-y-6 font-sans text-gray-800">
+                    {/* --- SCREEN ONLY DASHBOARD --- */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 screen-view-container p-2">
+
+                        {/* スタッフ評価 */}
+                        <div className="mb-2">
+                            <h3 className="text-sm font-bold text-gray-500 mb-2 pl-1">スタッフ評価</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-0 border border-gray-300 rounded overflow-hidden">
+                                {/* 関係性 */}
+                                <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                    <span className="font-bold text-gray-500 text-xs mb-1">関係性<br />(51点)</span>
+                                    <span className="font-bold text-2xl text-gray-800">{relationshipScore}</span>
+                                </div>
+                                {/* 接客 */}
+                                <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                    <span className="font-bold text-gray-500 text-xs mb-1">接客<br />(49点)</span>
+                                    <span className="font-bold text-2xl text-gray-800">{customerServiceScore}</span>
+                                </div>
+                                {/* 技術 */}
+                                <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                    <span className="font-bold text-gray-500 text-xs mb-1">技術(日常)<br />(50点)</span>
+                                    <span className="font-bold text-2xl text-gray-800">{technicalScore}</span>
+                                </div>
+                                {/* カット人数 */}
+                                <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                    <span className="font-bold text-gray-500 text-xs mb-1">カット人数<br />(50点)</span>
+                                    <span className="font-bold text-2xl text-gray-800">{performanceScore}</span>
+                                </div>
+                                {/* 合計 */}
+                                <div className="flex flex-col items-center justify-center p-3 bg-blue-50 md:col-span-1 col-span-2">
+                                    <span className="font-bold text-blue-800 text-xs mb-1">評価合計<br />(200点)</span>
+                                    <span className="font-bold text-3xl text-blue-600">{totalScore200}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 店長評価 */}
+                        {isManagerUnlocked && (
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-500 mb-2 pl-1">店長評価</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-0 border border-gray-300 rounded overflow-hidden">
+                                    {/* 運営・顧客 */}
+                                    <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                        <span className="font-bold text-gray-500 text-xs mb-1 text-center">運営・顧客<br />(32点)</span>
+                                        <span className="font-bold text-2xl text-gray-800">{mgrCol1}</span>
+                                    </div>
+                                    {/* チーム・戦略 */}
+                                    <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                        <span className="font-bold text-gray-500 text-xs mb-1 text-center">チーム・戦略<br />(28点)</span>
+                                        <span className="font-bold text-2xl text-gray-800">{mgrCol2}</span>
+                                    </div>
+                                    {/* 問題解決 */}
+                                    <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                        <span className="font-bold text-gray-500 text-xs mb-1 text-center">問題解決<br />(24点)</span>
+                                        <span className="font-bold text-2xl text-gray-800">{mgrCol3}</span>
+                                    </div>
+                                    {/* 行動・他 */}
+                                    <div className="flex flex-col items-center justify-center p-3 border-b md:border-b-0 border-r border-gray-300 bg-gray-50">
+                                        <span className="font-bold text-gray-500 text-xs mb-1 text-center">行動・他<br />(56点)</span>
+                                        <span className="font-bold text-2xl text-gray-800">{mgrCol4}</span>
+                                    </div>
+                                    {/* 店長合計 */}
+                                    <div className="flex flex-col items-center justify-center p-3 bg-blue-50 md:col-span-1 col-span-2">
+                                        <span className="font-bold text-blue-800 text-xs mb-1 text-center">店長合計<br />(140点)</span>
+                                        <span className="font-bold text-3xl text-blue-600">{managerTotal}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // PasswordModal
+        const PasswordModal = ({ isOpen, onClose, onUnlock }) => {
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState(false);
+
+            useEffect(() => {
+                if (isOpen) {
+                    setPassword('');
+                    setError(false);
+                }
+            }, [isOpen]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (password === 'ammd') {
+                    onUnlock();
+                    onClose();
+                } else {
+                    setError(true);
+                }
+            };
+
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">店長評価ロック解除</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => { setPassword(e.target.value); setError(false); }}
+                                    className={`w-full p-3 border rounded-lg outline-none focus:ring-2 ${error ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
+                                    placeholder="パスワードを入力"
+                                    autoFocus
+                                />
+                                {error && <p className="text-red-500 text-sm mt-1">パスワードが間違っています</p>}
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
+                            >
+                                解除する
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // CriteriaGuide
+        const CriteriaGuide = () => {
+            const [isOpen, setIsOpen] = useState(false);
+
+            return (
+                <div className="mx-2 sm:mx-4 mb-4 rounded-xl overflow-hidden print-break-inside-avoid shadow-sm">
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(!isOpen)}
+                        className={`w-full p-4 flex justify-between items-center text-sm sm:text-base font-bold transition-all duration-200 border-2 ${isOpen
+                            ? 'bg-blue-800 text-white border-blue-900'
+                            : 'bg-white text-blue-900 border-dashed border-blue-300 hover:border-blue-50' + ' hover:bg-blue-50'
+                            }`}
+                    >
+                        <span className="flex items-center gap-2">
+                            {isOpen ? <MinusCircle size={20} /> : <PlusCircle size={20} />}
+                            <span>4段階評価基準ガイド{isOpen ? 'を閉じる' : 'を開く'}</span>
+                        </span>
+                        <ChevronDown size={20} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isOpen && (
+                        <div className="p-4 text-xs sm:text-sm text-gray-800 space-y-4 bg-white border-x border-b border-gray-200 rounded-b-xl">
+                            <div className="flex gap-3 items-start">
+                                <span className="font-bold text-white bg-blue-700 px-2 py-1 rounded shrink-0 h-fit">3 優秀</span>
+                                <div className="text-gray-700">
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>非常に高い成果を達成している。期待を大きく上回るパフォーマンス。</li>
+                                        <li>新しいアイデアを提案し、周囲にも良い影響を及ぼす。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <hr className="border-gray-100" />
+                            <div className="flex gap-3 items-start">
+                                <span className="font-bold text-white bg-sky-500 px-2 py-1 rounded shrink-0 h-fit">2 良好</span>
+                                <div className="text-gray-700">
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>期待される成果を達成している。定められた目標を満たしている。</li>
+                                        <li>定期的に安定したパフォーマンスを発揮。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <hr className="border-gray-100" />
+                            <div className="flex gap-3 items-start">
+                                <span className="font-bold text-white bg-orange-500 px-2 py-1 rounded shrink-0 h-fit">1 改善</span>
+                                <div className="text-gray-700">
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>基準に達していない。時折目標を達成するが、一貫性が欠ける。</li>
+                                        <li>追加のサポートやトレーニングが必要。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <hr className="border-gray-100" />
+                            <div className="flex gap-3 items-start">
+                                <span className="font-bold text-white bg-red-500 px-2 py-1 rounded shrink-0 h-fit">0 不可</span>
+                                <div className="text-gray-700">
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>期待される成果を達成していない。明確な努力が見られない。</li>
+                                        <li>継続的なパフォーマンスの低下が見られる。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ScheduleAlert = ({ date }) => {
+            const month = new Date(date).getMonth() + 1;
+            let alert = null;
+
+            if (month === 7) alert = { title: "期初", text: "第4四半期評価 / 期末評価", type: "info" };
+            else if (month === 10) alert = { title: "第1四半期", text: "第1四半期評価", type: "info" };
+            else if (month === 1) alert = { title: "第2四半期", text: "第2四半期評価", type: "info" };
+            else if (month === 4) alert = { title: "第3四半期", text: "第3四半期評価", type: "info" };
+            else if (month === 6) alert = { title: "期末", text: "次期目標設定", type: "warn" };
+
+            if (!alert) return null;
+
+            const bgClass = alert.type === 'warn' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-indigo-50 border-indigo-200 text-indigo-800';
+            const iconClass = alert.type === 'warn' ? 'text-amber-600' : 'text-indigo-600';
+
+            return (
+                <div className={`mx-3 sm:mx-5 mt-4 p-3 rounded-lg border flex items-start gap-3 shadow-sm ${bgClass} print:hidden`}>
+                    <Bell className={`shrink-0 mt-0.5 ${iconClass}`} size={20} />
+                    <div>
+                        <div className="font-bold flex items-center gap-2">
+                            <span>{month}月: {alert.title}</span>
+                        </div>
+                        <div className="text-sm font-bold mt-1">
+                            {alert.text} <span className="font-normal">の時期です。面談を実施してください。</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // TopPage (Staff Selection Dashboard)
+        const TopPage = ({ staffList, onSelect, onCreate, onDelete }) => {
+            // Deduplicate staff list by Name + Store, keeping the latest (list is already sorted by date desc)
+            const uniqueStaffList = useMemo(() => {
+                const seen = new Set();
+                return staffList.filter(staff => {
+                    const key = `${staff.store}_${staff.name}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+            }, [staffList]);
+
+            return (
+                <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                            <div>
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+                                    <Store className="text-blue-600" size={32} />
+                                    QB House Evaluation Sheet
+                                </h1>
+                                <p className="text-gray-500 mt-1">スタッフ評価管理システム</p>
+                            </div>
+                            <button
+                                onClick={onCreate}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+                            >
+                                <Plus size={24} /> 新規評価を作成
+                            </button>
+                        </div>
+
+                        {/* Top Page JSON Actions */}
+                        <div className="mb-6 flex justify-end gap-2">
+                            <label className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm cursor-pointer transition-colors flex items-center gap-2">
+                                <Upload size={16} /> 復元 (JSON)
+                                <input type="file" accept=".json" className="hidden" onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        const reader = new FileReader();
+                                        reader.onload = (ev) => {
+                                            try {
+                                                const importedData = JSON.parse(ev.target.result);
+                                                if (confirm('現在のデータを上書きしてデータを復元しますか？（この操作は取り消せません）')) {
+                                                    Object.keys(importedData).forEach(key => {
+                                                        if (key.startsWith('qb_')) {
+                                                            localStorage.setItem(key, importedData[key]);
+                                                        }
+                                                    });
+                                                    alert('データの復元が完了しました。ページをリロードします。');
+                                                    window.location.reload();
+                                                }
+                                            } catch (err) {
+                                                alert('ファイルの読み込みに失敗しました。');
+                                            }
+                                        };
+                                        reader.readAsText(e.target.files[0]);
+                                    }
+                                }} />
+                            </label>
+                            <button
+                                onClick={() => {
+                                    const dataToExport = {};
+                                    Object.keys(localStorage).forEach(key => {
+                                        if (key.startsWith('qb_')) {
+                                            dataToExport[key] = localStorage.getItem(key);
+                                        }
+                                    });
+                                    const blob = new Blob([JSON.stringify(dataToExport)], { type: 'application/json' });
+                                    const link = document.createElement('a');
+                                    link.href = URL.createObjectURL(blob);
+                                    link.download = `backup_qb_eval_${new Date().toISOString().split('T')[0]}.json`;
+                                    link.click();
+                                }}
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm transition-colors flex items-center gap-2"
+                            >
+                                <Download size={16} /> バックアップ保存
+                            </button>
+                        </div>
+
+                        {uniqueStaffList.length === 0 ? (
+                            <div className="bg-white rounded-2xl p-10 text-center shadow-sm border border-gray-100">
+                                <div className="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <User size={40} className="text-blue-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">評価データがありません</h3>
+                                <p className="text-gray-500 mb-6">「新規評価を作成」ボタンから新しいスタッフの評価を開始してください。</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                {uniqueStaffList.map((staff) => (
+                                    <div
+                                        key={staff.id}
+                                        onClick={() => onSelect(staff.id)}
+                                        className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 transform -translate-x-full group-hover:translate-x-0 transition-transform"></div>
+
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                                <Store size={12} /> {staff.store || '店舗未入力'}
+                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); onDelete(staff.id); }}
+                                                className="text-gray-300 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                                title="削除"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
+                                            {staff.name || '名称未設定'}
+                                        </h3>
+
+                                        <div className="flex items-center gap-2 text-xs text-gray-400 border-t border-gray-50 pt-3 mt-2">
+                                            <History size={12} />
+                                            <span>最終更新: {new Date(staff.updatedAt).toLocaleString('ja-JP')}</span>
+                                        </div>
+
+                                        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600">
+                                            <ChevronRight size={20} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const HistorySidebar = ({ isOpen, onClose, historyList, currentId, onSelect, onCompare, metadata }) => {
+            return (
+                <>
+                    {isOpen && <div className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm transition-opacity" onClick={onClose} />}
+                    <div className={`fixed inset-y-0 right-0 z-[70] w-80 sm:w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+                        <div className="p-4 bg-gray-50 border-b">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                                    <History size={20} /> 評価履歴
+                                </h3>
+                                <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            {metadata && (
+                                <div className="text-xs text-gray-600 bg-white p-2 rounded border border-blue-100 shadow-sm">
+                                    <div className="flex justify-between border-b border-gray-100 pb-1 mb-1">
+                                        <span className="font-bold">{metadata.store}</span>
+                                        <span className="font-bold">{metadata.name}</span>
+                                    </div>
+                                    <div className="text-gray-400 text-[10px] text-right">ID: {metadata.employeeId}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            {historyList.length === 0 ? (
+                                <div className="text-center text-gray-400 py-10">
+                                    <p>履歴がありません</p>
+                                </div>
+                            ) : (
+                                historyList.map(record => (
+                                    <div
+                                        key={record.id}
+                                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer hover:shadow-md ${record.id === currentId ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white hover:border-blue-200'}`}
+                                        onClick={() => onSelect(record.id)}
+                                    >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="font-bold text-gray-800 text-lg">{record.date}</span>
+                                            {record.id === currentId && <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">表示中</span>}
+                                        </div>
+                                        <div className="text-sm text-gray-600 mb-2">
+                                            評価者: {record.evaluator || '未設定'}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100/50">
+                                            <div className="flex-1">
+                                                <span className="text-xs text-gray-400">評価合計</span>
+                                                <div className="text-xl font-bold text-blue-600">{record.totalScore || record.performanceScore || '-'}</div>
+                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); onCompare(record); }}
+                                                className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                                            >
+                                                <Layers size={14} /> 比較
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </>
+            );
+        };
+
+        // MenuPage (Staff Action Menu)
+        const MenuPage = ({ staff, onResume, onNew, onHistory, onBack }) => {
+            if (!staff) return null;
+            return (
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+                        <div className="bg-blue-900 p-6 text-white relative">
+                            <button onClick={onBack} className="absolute left-4 top-4 hover:bg-blue-800 p-2 rounded-full transition-colors">
+                                <ArrowLeft size={24} />
+                            </button>
+                            <div className="mt-8 text-center">
+                                <h2 className="text-2xl font-bold mb-1">{staff.name}</h2>
+                                <p className="text-blue-200 text-sm flex items-center justify-center gap-1">
+                                    <Store size={14} /> {staff.store}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <button onClick={onResume} className="w-full bg-blue-50 hover:bg-blue-100 text-blue-900 p-4 rounded-xl flex items-center gap-4 transition-all group border border-blue-200">
+                                <div className="bg-blue-600 text-white p-3 rounded-full group-hover:scale-110 transition-transform">
+                                    <User size={24} />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="font-bold text-lg">続きから編集</h3>
+                                    <p className="text-xs text-gray-500">前回のデータを編集または確認します</p>
+                                </div>
+                                <ChevronRight className="ml-auto text-blue-400" />
+                            </button>
+
+                            <button onClick={onNew} className="w-full bg-green-50 hover:bg-green-100 text-green-900 p-4 rounded-xl flex items-center gap-4 transition-all group border border-green-200">
+                                <div className="bg-green-600 text-white p-3 rounded-full group-hover:scale-110 transition-transform">
+                                    <Plus size={24} />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="font-bold text-lg">新規評価を作成</h3>
+                                    <p className="text-xs text-gray-500">このスタッフの新しい評価を作成します</p>
+                                </div>
+                                <ChevronRight className="ml-auto text-green-400" />
+                            </button>
+
+                            <button onClick={onHistory} className="w-full bg-purple-50 hover:bg-purple-100 text-purple-900 p-4 rounded-xl flex items-center gap-4 transition-all group border border-purple-200">
+                                <div className="bg-purple-600 text-white p-3 rounded-full group-hover:scale-110 transition-transform">
+                                    <History size={24} />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="font-bold text-lg">履歴一覧を確認</h3>
+                                    <p className="text-xs text-gray-500">過去の評価履歴を表示・比較します</p>
+                                </div>
+                                <ChevronRight className="ml-auto text-purple-400" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- APP ---
+
+        const STAFF_INDEX_KEY = 'qb_staff_index_v1';
+        const DATA_PREFIX = 'qb_data_';
+
+        const generateId = () => {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        };
+
+        const ScrollToTopButton = () => {
+            const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+            return (
+                <button onClick={scrollToTop} className="fixed bottom-6 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors z-40 no-print opacity-80">
+                    <ArrowUp size={20} />
+                </button>
+            );
+        }
+
+        function App() {
+            const [staffList, setStaffList] = useState([]);
+            const [currentId, setCurrentId] = useState(null);
+
+            // View Mode State: 'TOP', 'MENU', 'FORM'
+            const [viewMode, setViewMode] = useState('TOP');
+            const [selectedStaffSummary, setSelectedStaffSummary] = useState(null);
+
+            const [items, setItems] = useState(INITIAL_ITEMS);
+            const [metadata, setMetadata] = useState({
+                id: '', store: '', name: '', employeeId: '', evaluator: '',
+                date: new Date().toISOString().split('T')[0],
+                updatedAt: Date.now(),
+                performance: { monthlyCuts: new Array(12).fill(0), excludedFromAverage: new Array(12).fill(false), goalCuts: 0, goalScore: 0, monthlyHolidays: 0 }
+            });
+            const [performanceScore, setPerformanceScore] = useState(0);
+
+            const [activeTab, setActiveTab] = useState('関係性');
+            const [isStoreManagerUnlocked, setIsStoreManagerUnlocked] = useState(false);
+            const [showPasswordModal, setShowPasswordModal] = useState(false);
+            const [isDashboardCollapsed, setIsDashboardCollapsed] = useState(true);
+            const [isChartCollapsed, setIsChartCollapsed] = useState(false);
+
+            const [isBatchPrinting, setIsBatchPrinting] = useState(false);
+            const [batchPrintData, setBatchPrintData] = useState([]);
+
+            // History & Comparison
+            const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+            const [comparisonData, setComparisonData] = useState(null); // { items, performanceScore, ... }
+            const [isReadOnly, setIsReadOnly] = useState(false);
+
+            const historyList = useMemo(() => {
+                if (!metadata.name || !metadata.store) return [];
+                const matches = staffList.filter(s => s.name === metadata.name && s.store === metadata.store);
+                return matches.map(s => {
+                    // Fetch full details to get score and evaluator
+                    try {
+                        const raw = localStorage.getItem(DATA_PREFIX + s.id);
+                        if (raw) {
+                            const d = JSON.parse(raw);
+                            const itemTotal = d.items ? d.items.reduce((sum, i) => sum + (i.score ?? 0), 0) : 0;
+                            const pScore = d.performanceScore || 0;
+                            return {
+                                ...s,
+                                performanceScore: pScore,
+                                evaluator: d.metadata?.evaluator,
+                                employeeId: d.metadata?.employeeId,
+                                totalScore: itemTotal + pScore
+                            };
+                        }
+                    } catch (e) {
+                        console.error("History detail load failed", e);
+                    }
+                    return s;
+                });
+            }, [staffList, metadata.name, metadata.store]);
+
+            useEffect(() => {
+                try {
+                    const rawIndex = localStorage.getItem(STAFF_INDEX_KEY);
+                    let index = rawIndex ? JSON.parse(rawIndex) : [];
+                    // Sort descending by date
+                    index.sort((a, b) => b.updatedAt - a.updatedAt);
+                    setStaffList(index);
+                    // Do not auto-load; wait on TopPage
+                } catch (e) {
+                    console.error("Init failed", e);
+                }
+            }, []);
+
+            // 一括印刷のトリガー
+            useEffect(() => {
+                if (isBatchPrinting && batchPrintData.length > 0) {
+                    const timer = setTimeout(() => {
+                        window.print();
+                        const cleanup = () => {
+                            setIsBatchPrinting(false);
+                            setBatchPrintData([]);
+                            window.removeEventListener('afterprint', cleanup);
+                        };
+                        window.addEventListener('afterprint', cleanup);
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                }
+            }, [isBatchPrinting, batchPrintData]);
+
+            const createNewStaff = () => {
+                const newId = generateId();
+                const newMeta = {
+                    id: newId, store: '', name: '', employeeId: '', evaluator: '',
+                    date: new Date().toISOString().split('T')[0],
+                    updatedAt: Date.now(),
+                    performance: { monthlyCuts: new Array(12).fill(0), excludedFromAverage: new Array(12).fill(false), goalCuts: 0, goalScore: 0, monthlyHolidays: 0 }
+                };
+                const newItems = JSON.parse(JSON.stringify(INITIAL_ITEMS));
+                setMetadata(newMeta);
+                setItems(newItems);
+                setPerformanceScore(5);
+                setCurrentId(newId);
+                // When creating new, go directly to form
+                setViewMode('FORM');
+                setIsReadOnly(false);
+
+                setIsStoreManagerUnlocked(false);
+                setActiveTab('関係性');
+                const newSummary = { id: newId, name: '', store: '', date: newMeta.date, updatedAt: Date.now() };
+                const newList = [newSummary, ...staffList];
+                setStaffList(newList);
+                localStorage.setItem(STAFF_INDEX_KEY, JSON.stringify(newList));
+                saveToStorage(newId, newMeta, newItems, 5);
+            };
+
+            // Copy New: Create a new evaluation based on existing staff profile
+            const createNewFromSummary = (summary) => {
+                // Try to load previous data to preserve employeeId and evaluator
+                const prevRaw = localStorage.getItem(DATA_PREFIX + summary.id);
+                let prevMeta = {};
+                if (prevRaw) {
+                    try {
+                        const prevData = JSON.parse(prevRaw);
+                        prevMeta = prevData.metadata || {};
+                    } catch (e) {
+                        console.error('Failed to load previous data for new', e);
+                    }
+                }
+
+                const newId = generateId();
+                const newMeta = {
+                    id: newId, store: summary.store, name: summary.name,
+                    employeeId: prevMeta.employeeId || '',
+                    evaluator: prevMeta.evaluator || '',
+                    date: new Date().toISOString().split('T')[0],
+                    updatedAt: Date.now(),
+                    performance: { monthlyCuts: new Array(12).fill(0), excludedFromAverage: new Array(12).fill(false), goalCuts: 0, goalScore: 0, monthlyHolidays: 0 }
+                };
+                const newItems = JSON.parse(JSON.stringify(INITIAL_ITEMS));
+                setMetadata(newMeta);
+                setItems(newItems);
+                setPerformanceScore(5);
+                setCurrentId(newId);
+                setViewMode('FORM');
+                setIsReadOnly(false);
+
+                setIsStoreManagerUnlocked(false);
+                setActiveTab('関係性');
+                const newSummary = { id: newId, name: summary.name, store: summary.store, date: newMeta.date, updatedAt: Date.now() };
+                const newList = [newSummary, ...staffList];
+                setStaffList(newList);
+                localStorage.setItem(STAFF_INDEX_KEY, JSON.stringify(newList));
+                saveToStorage(newId, newMeta, newItems, 5);
+            };
+
+            const loadStaffData = (id) => {
+                try {
+                    const raw = localStorage.getItem(DATA_PREFIX + id);
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        setMetadata({
+                            ...data.metadata,
+                            performance: {
+                                monthlyCuts: new Array(12).fill(0),
+                                excludedFromAverage: new Array(12).fill(false),
+                                goalCuts: 0,
+                                goalScore: 0,
+                                monthlyHolidays: 0,
+                                ...data.metadata?.performance
+                            }
+                        });
+                        setItems(data.items);
+                        setPerformanceScore(data.performanceScore || 5);
+                        setCurrentId(id);
+                        setIsStoreManagerUnlocked(data.items.some(i => i.category === '店長' && i.score !== null));
+                        setViewMode('FORM'); // Ensure we switch to form view
+                        setIsReadOnly(false);
+                    }
+                } catch (e) {
+                    console.error("Load failed", e);
+                }
+            };
+
+            const deleteStaff = (id) => {
+                if (!window.confirm("本当にこのスタッフのデータを削除しますか？")) return;
+                const newList = staffList.filter(s => s.id !== id);
+                setStaffList(newList);
+                localStorage.setItem(STAFF_INDEX_KEY, JSON.stringify(newList));
+                localStorage.removeItem(DATA_PREFIX + id);
+                if (currentId === id) {
+                    setCurrentId(null);
+                    setViewMode('TOP');
+                }
+            };
+
+            const saveToStorage = (id, meta, currentItems, pScore) => {
+                const dataToSave = {
+                    metadata: { ...meta, updatedAt: Date.now() },
+                    items: currentItems,
+                    performanceScore: pScore
+                };
+                localStorage.setItem(DATA_PREFIX + id, JSON.stringify(dataToSave));
+                setStaffList(prev => {
+                    const newList = prev.map(s => s.id === id ? {
+                        ...s, name: meta.name, store: meta.store, date: meta.date, updatedAt: Date.now()
+                    } : s).sort((a, b) => b.updatedAt - a.updatedAt);
+                    localStorage.setItem(STAFF_INDEX_KEY, JSON.stringify(newList));
+                    return newList;
+                });
+            };
+
+            useEffect(() => {
+                if (currentId) {
+                    const timer = setTimeout(() => {
+                        saveToStorage(currentId, metadata, items, performanceScore);
+                    }, 500);
+                    return () => clearTimeout(timer);
+                }
+            }, [items, metadata, performanceScore, currentId]);
+
+            const filteredItems = useMemo(() => {
+                return items.filter((item) => item.category === activeTab);
+            }, [items, activeTab]);
+
+            const handleUpdateScore = useCallback((no, newScore) => {
+                setItems((prev) =>
+                    prev.map((item) => (item.no === no ? { ...item, score: newScore } : item))
+                );
+            }, []);
+
+            const handleUpdateMemo = useCallback((no, newMemoString) => {
+                setItems((prev) =>
+                    prev.map((item) => (item.no === no ? { ...item, memo: newMemoString, memos: undefined } : item))
+                );
+            }, []);
+
+            const handleUpdateIncidents = useCallback((no, newIncidents) => {
+                setItems((prev) =>
+                    prev.map((item) => {
+                        if (item.no !== no) return item;
+
+                        // Recalculate score based on incidents
+                        let total = 0;
+                        if (newIncidents && newIncidents.length > 0) {
+                            total = newIncidents.reduce((sum, inc) => sum + (inc.deduction || 0) + (inc.improvement || 0), 0);
+                        }
+
+                        // Score cannot be positive, and cannot be below a reasonable floor if min is set?
+                        // Actually, for these items, max is negative (e.g. -10).
+                        // If score is 0, it means no deduction or fully improved.
+                        // We clamp at 0 (Max score is 0). MIN is technically item.max (e.g. -15 or -10) but if multipled, could be lower?
+                        // User requirement implies summation. "1件1件".
+                        // Let's assume the score is just the sum, clamped at 0.
+                        const finalScore = Math.min(0, total);
+
+                        return { ...item, incidents: newIncidents, score: finalScore };
+                    })
+                );
+            }, []);
+
+            const handlePerformanceUpdate = useCallback((newData) => {
+                setMetadata(prev => ({ ...prev, performance: newData }));
+            }, []);
+
+            const handleTabChange = (cat) => {
+                if (cat === '店長' && !isStoreManagerUnlocked) {
+                    setShowPasswordModal(true);
+                } else {
+                    setActiveTab(cat);
+                }
+            };
+
+            const handleDownloadCSV = useCallback(() => {
+                let csvContent = '\uFEFF';
+                csvContent += `店舗名: ${metadata.store}, スタッフ氏名: ${metadata.name}, 社員番号: ${metadata.employeeId}, 日付: ${metadata.date}\n\n`;
+                csvContent += 'No,大項目,小項目,評価内容,点数,最大点,メモ\n';
+                items.forEach((row) => {
+                    const scoreDisplay = row.score !== null ? row.score : "未記入";
+                    const memoContent = (row.memos && row.memos.length > 0) ? row.memos.join(" / ") : (row.memo || "");
+                    const memoText = memoContent ? `"${memoContent.replace(/"/g, '""')}"` : "";
+                    csvContent += `${row.no},${row.category},${row.subCategory} - ${row.item},"${row.desc.replace(/"/g, '""')}",${scoreDisplay},${row.max},${memoText}\n`;
+                });
+                const totalScore = items.reduce((sum, item) => sum + (item.score ?? 0), 0) + performanceScore;
+                csvContent += `,,,,,,合計スコア: ${totalScore}\n`;
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${metadata.name || 'スタッフ'}_評価_${metadata.date}.csv`;
+                link.click();
+            }, [items, metadata, performanceScore]);
+
+            const handleDownloadAllCSV = useCallback(() => {
+                let csvContent = '\uFEFF';
+
+                // Header Row: 項目名 + 各スタッフ名
+                let headerRow = '"項目/スタッフ"';
+                staffList.forEach(staff => {
+                    headerRow += `,"${staff.store} ${staff.name}"`;
+                });
+                csvContent += headerRow + '\n';
+
+                // Data Loading
+                const allStaffData = staffList.map(staff => {
+                    const rawData = localStorage.getItem(DATA_PREFIX + staff.id);
+                    if (!rawData) return null;
+                    return JSON.parse(rawData);
+                }).filter(d => d !== null);
+
+                // Basic Info Rows
+                const basicRows = [
+                    { label: '店舗名', key: 'store' },
+                    { label: '氏名', key: 'name' },
+                    { label: '社員番号', key: 'employeeId' },
+                    { label: '評価日', key: 'date' },
+                    { label: '評価者', key: 'evaluator' }
+                ];
+
+                basicRows.forEach(rowInfo => {
+                    let rowStr = `"${rowInfo.label}"`;
+                    allStaffData.forEach(d => {
+                        rowStr += `,"${d.metadata[rowInfo.key] || ''}"`;
+                    });
+                    csvContent += rowStr + '\n';
+                });
+
+                // Summary Scores
+                let totalRow = '"総合スコア"';
+                let perfRow = '"実績評価点"';
+                let mgrRow = '"店長評価点"';
+
+                allStaffData.forEach(d => {
+                    const items = d.items;
+                    const pScore = d.performanceScore || 0;
+                    const itemTotal = items.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                    const total = itemTotal + pScore;
+                    const mgrTotal = items.filter(i => i.category === '店長').reduce((sum, i) => sum + (i.score ?? 0), 0);
+
+                    totalRow += `,${total}`;
+                    perfRow += `,${pScore}`;
+                    mgrRow += `,${mgrTotal}`;
+                });
+
+                csvContent += totalRow + '\n';
+                csvContent += perfRow + '\n';
+                csvContent += mgrRow + '\n';
+                csvContent += '\n'; // Spacer
+
+                // Detail Items Rows
+                INITIAL_ITEMS.forEach(initItem => {
+                    let itemRow = `"No.${initItem.no} ${initItem.category}-${initItem.item}"`;
+                    allStaffData.forEach(d => {
+                        const target = d.items.find(i => i.no === initItem.no);
+                        const score = target && target.score !== null ? target.score : '';
+                        itemRow += `,${score}`;
+                    });
+                    csvContent += itemRow + '\n';
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                const dateStr = new Date().toISOString().split('T')[0];
+                link.download = `QB_全スタッフ評価一覧_縦列_${dateStr}.csv`;
+                link.click();
+            }, [staffList]);
+
+            // 単一印刷も一括印刷のロジックに流す
+            const handlePrint = useCallback(() => {
+                const currentData = {
+                    metadata: { ...metadata, updatedAt: Date.now() },
+                    items: items,
+                    performanceScore: performanceScore,
+                    comparison: comparisonData // Pass comparison data
+                };
+                setBatchPrintData([currentData]);
+                setIsBatchPrinting(true);
+            }, [metadata, items, performanceScore, comparisonData]);
+
+            const handleBatchPrint = useCallback(() => {
+                if (staffList.length === 0) {
+                    alert("印刷するデータがありません");
+                    return;
+                }
+                if (!confirm(`登録されている全${staffList.length}名分のデータを一括印刷しますか？\n（1人につきA4用紙2枚で出力されます）`)) {
+                    return;
+                }
+
+                const allData = staffList.map(staff => {
+                    const rawData = localStorage.getItem(DATA_PREFIX + staff.id);
+                    if (!rawData) return null;
+                    return JSON.parse(rawData);
+                }).filter(d => d !== null);
+
+                setBatchPrintData(allData);
+                setIsBatchPrinting(true);
+            }, [staffList]);
+
+            const totalScore = useMemo(() => {
+                const itemScore = items.reduce((sum, item) => sum + (item.score ?? 0), 0);
+                return itemScore + performanceScore;
+            }, [items, performanceScore]);
+
+            const relationshipScore = useMemo(() => items.filter(i => i.category === '関係性').reduce((sum, i) => sum + (i.score || 0), 0), [items]);
+            const customerServiceScore = useMemo(() => items.filter(i => i.category === '接客').reduce((sum, i) => sum + (i.score || 0), 0), [items]);
+            const technicalScore = useMemo(() => items.filter(i => i.category === '技術').reduce((sum, i) => sum + (i.score || 0), 0), [items]);
+            const managerScore = useMemo(() => items.filter(i => i.category === '店長').reduce((sum, i) => sum + (i.score || 0), 0), [items]);
+
+            const totalScore200 = relationshipScore + customerServiceScore + technicalScore + performanceScore;
+
+            // Print View Calculations for App component
+            const perf = metadata.performance || {};
+            const { currentTotal: currentCutsTotal, predictedTotal, average: avgForPrint } = calculatePerformanceMetrics(perf.monthlyCuts, perf.excludedFromAverage);
+
+
+            // Define radarData and lineChartData inside App for single print use
+            const radarData = useMemo(() => {
+                return AXES.map((axis) => {
+                    if (axis === '実績') {
+                        const percentage = Math.min(100, Math.round((performanceScore / 50) * 100));
+                        return { subject: axis, A: percentage, fullMark: 100 };
+                    }
+                    const axisItems = items.filter((i) => i.axis === axis && i.max > 0);
+                    if (axisItems.length === 0) {
+                        return { subject: axis, A: 0, fullMark: 100 };
+                    }
+                    const currentSum = axisItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
+                    const maxSum = axisItems.reduce((sum, i) => sum + i.max, 0);
+                    const percentage = maxSum === 0 ? 0 : Math.round((currentSum / maxSum) * 100);
+                    return { subject: axis, A: percentage, fullMark: 100 };
+                });
+            }, [items, performanceScore]);
+
+            const lineChartData = useMemo(() => {
+                const monthlyGoal = metadata.performance.goalCuts > 0 ? Math.round(metadata.performance.goalCuts / 12) : 0;
+                return MONTH_LABELS.map((label, index) => ({
+                    name: label,
+                    cuts: metadata.performance.monthlyCuts[index] > 0 ? metadata.performance.monthlyCuts[index] : null,
+                    goal: monthlyGoal
+                }));
+            }, [metadata.performance]);
+
+            // --- BATCH PRINT RENDERING HELPER ---
+            const renderBatchPrintContent = () => {
+                return batchPrintData.map((data, index) => {
+                    const m = data.metadata;
+                    const its = data.items;
+                    const pScore = data.performanceScore || 0;
+                    const comp = data.comparison; // Get comparison data
+
+                    const relScore = its.filter(i => i.category === '関係性').reduce((sum, i) => sum + (i.score || 0), 0);
+                    const csScore = its.filter(i => i.category === '接客').reduce((sum, i) => sum + (i.score || 0), 0);
+                    const techScore = its.filter(i => i.category === '技術').reduce((sum, i) => sum + (i.score || 0), 0);
+                    const totScore = relScore + csScore + techScore + pScore;
+
+                    const mgrUnlocked = its.some(i => i.category === '店長' && i.score !== null);
+                    const mgrScore = its.filter(i => i.category === '店長').reduce((sum, i) => sum + (i.score || 0), 0);
+
+                    const pf = m.performance || { monthlyCuts: [], excludedFromAverage: [], goalCuts: 0 };
+
+                    const { currentTotal, average, predictedTotal } = calculatePerformanceMetrics(pf.monthlyCuts, pf.excludedFromAverage);
+
+                    // Variables for display
+                    const curTotal = currentTotal;
+                    const predTotal = predictedTotal;
+                    const mCuts = pf.monthlyCuts || new Array(12).fill(0);
+
+                    return (
+                        <div key={index} className="page-break">
+                            {/* Page 1 */}
+                            {/* Continuous Page Content */}
+                            <div className="print-view-container">
+                                <div className="border-b-2 border-gray-800 pb-2 mb-2 flex justify-between items-end">
+                                    <div>
+                                        <h1 className="text-xl font-bold text-gray-900">評価フィードバックシート</h1>
+                                        <p className="text-gray-500 text-xs">QB House Evaluation Sheet</p>
+                                    </div>
+                                    <div className="text-right text-xs">
+                                        <p>店舗: <span className="font-bold border-b border-gray-400 px-2">{m.store}</span> / 氏名: <span className="font-bold border-b border-gray-400 px-2">{m.name}</span></p>
+                                        <p>評価日: {m.date}</p>
+                                    </div>
+                                </div>
+
+                                <div className="mb-4 border border-gray-300 rounded p-3 bg-gray-50">
+                                    <div className="flex justify-between items-center">
+                                        <div className="text-center px-6 border-r border-gray-300 min-w-[140px]">
+                                            <p className="text-[9pt] text-gray-500 font-bold">総合スコア</p>
+                                            <p className="text-4xl font-bold text-gray-900 leading-none mt-1">{totScore}<span className="text-sm font-normal ml-1">点</span></p>
+                                            {comp && (
+                                                <div className="mt-1 text-xs text-gray-500">
+                                                    (前回: <span className="font-bold text-gray-700">{comp.performanceScore + (comp.items?.reduce((s, i) => s + (i.score ?? 0), 0) || 0)}</span>点)
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-center px-4 flex-grow">
+                                            <div className="flex justify-around items-center h-full">
+                                                <div>
+                                                    <p className="text-[8pt] text-gray-500">カット実績累計</p>
+                                                    <p className="text-xl font-bold">{curTotal.toLocaleString()}名</p>
+                                                </div>
+                                                <div className="border-l border-gray-200 pl-6">
+                                                    <p className="text-[8pt] text-gray-500">年間着地予想</p>
+                                                    <p className="text-xl font-bold text-blue-700">{predTotal.toLocaleString()}名</p>
+                                                </div>
+                                                <div className="border-l border-gray-200 pl-6">
+                                                    <p className="text-[8pt] text-gray-500">目標達成率(予)</p>
+                                                    <p className="text-xl font-bold text-gray-700">
+                                                        {pf.goalCuts > 0 ? Math.round((predTotal / pf.goalCuts) * 100) : 0}%
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <ScoreDashboard items={its} performanceScore={pScore} performanceData={pf} isManagerUnlocked={mgrUnlocked} />
+
+                                <div className="mb-4 border rounded-lg p-2 bg-white print-break-inside-avoid mt-4">
+                                    <p className="text-[8pt] font-bold text-gray-500 mb-1">月別実績データ</p>
+                                    <div className="grid grid-cols-12 gap-0 text-[8pt] border-t border-l border-gray-300">
+                                        {MONTH_LABELS.map((mon, idx) => (
+                                            <div key={mon} className="col-span-1 border-r border-b border-gray-300 text-center bg-gray-100 font-bold py-1">{mon}</div>
+                                        ))}
+                                        {mCuts.map((c, idx) => (
+                                            <div key={idx} className="col-span-1 border-r border-b border-gray-300 text-center py-1">{c || '-'}</div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Charts */}
+                                <div className={`grid ${mgrUnlocked ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mb-4 mt-4`}>
+                                    <div className="border border-gray-300 rounded p-2 bg-white flex flex-col items-center print-chart-box">
+                                        <h3 className="text-[9pt] font-bold text-gray-600 text-center mb-1">スタッフ評価</h3>
+                                        <div className="print-chart-container flex justify-center items-center">
+                                            <PrintChartSection
+                                                items={its}
+                                                performanceData={pf}
+                                                performanceScore={pScore}
+                                                type="radar"
+                                                comparisonItems={comp?.items}
+                                                comparisonPerformanceScore={comp?.performanceScore}
+                                            />
+                                        </div>
+                                    </div>
+                                    {mgrUnlocked && (
+                                        <div className="border border-gray-300 rounded p-2 bg-white flex flex-col items-center print-chart-box">
+                                            <h3 className="text-[9pt] font-bold text-gray-600 text-center mb-1">店長スキル</h3>
+                                            <div className="print-chart-container flex justify-center items-center">
+                                                <PrintChartSection items={its} performanceData={pf} performanceScore={pScore} type="manager-radar" />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="border border-gray-300 rounded p-2 bg-white flex flex-col items-center print-chart-box">
+                                        <h3 className="text-[9pt] font-bold text-gray-600 text-center mb-1">月別カット推移</h3>
+                                        <div className="print-chart-container flex justify-center items-center">
+                                            <PrintChartSection items={its} performanceData={pf} performanceScore={pScore} type="line" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Detailed Items Start Immediately */}
+                            <div className="mt-4 mb-2">
+                                <div className="border-b border-gray-800 pb-1 mb-2 flex justify-between items-end">
+                                    <h2 className="text-lg font-bold text-gray-800">評価詳細 & メモ</h2>
+                                </div>
+
+                                {/* 3-Column Grid for Detail Items to save space */}
+                                <div className="print-grid-cols-3 text-[7pt]">
+                                    {its.filter(item => item.score !== null).map((item) => (
+                                        <div key={item.no} className="detail-item-box">
+                                            <div className="flex justify-between items-start">
+                                                <div className="w-[85%] detail-item-text">
+                                                    <span className="font-bold text-gray-500 mr-1 text-[7pt]">{item.no}.</span>
+                                                    <span className="font-bold text-gray-800">{item.item}</span>
+                                                    <span className="text-[6pt] text-gray-500 ml-1">({item.subCategory})</span>
+                                                </div>
+                                                <div className="font-bold text-blue-800 detail-item-score">{item.score}/{item.max}</div>
+                                            </div>
+                                            {((item.memos && item.memos.length > 0) || item.memo) && (
+                                                <div className="mt-1 p-1 bg-gray-50 border border-gray-200 rounded text-[6pt] text-gray-800 break-words">
+                                                    <span className="font-bold mr-1 text-gray-600">Memo:</span>
+                                                    {item.memos && item.memos.length > 0 ? item.memos.join(" / ") : item.memo}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Memo Field for Print Whitespace */}
+                            <div className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-3 h-32 break-inside-avoid">
+                                <p className="text-[8pt] font-bold text-gray-500 mb-1">メモ・総評</p>
+                            </div>
+                        </div>
+                    );
+                });
+            };
+
+            const handleHistorySelect = (id) => {
+                const raw = localStorage.getItem(DATA_PREFIX + id);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    // Open in read-only mode by default? Or just view mode.
+                    // For history view, we probably want minimal interaction or explicit edit.
+                    // Let's set it as current, but maybe add a read-only flag state?
+                    setMetadata({ ...data.metadata });
+                    setItems(data.items);
+                    setPerformanceScore(data.performanceScore || 5);
+                    setCurrentId(id);
+                    setIsStoreManagerUnlocked(data.items.some(i => i.category === '店長' && i.score !== null));
+                    setIsReadOnly(true); // Lock it
+                    setViewMode('FORM');
+                    setIsHistoryOpen(false); // Close sidebar
+                }
+            };
+
+            const handleCompare = (record) => {
+                const raw = localStorage.getItem(DATA_PREFIX + record.id);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    setComparisonData(data); // Store strictly for comparison display (charts)
+                    alert("比較データをロードしました。チャート上に前回のデータが赤色で表示されます。");
+                }
+            };
+
+            const handleEditMode = () => {
+                if (confirm('閲覧専用モードを解除して編集しますか？\n（注意: 過去のデータの書き換えとなります）')) {
+                    setIsReadOnly(false);
+                }
+            };
+
+
+
+            // --- VIEW DISPATCH ---
+            if (viewMode === 'TOP') {
+                return (
+                    <TopPage
+                        staffList={staffList}
+                        onSelect={(id) => {
+                            const staff = staffList.find(s => s.id === id);
+                            if (staff) {
+                                setSelectedStaffSummary(staff);
+                                setViewMode('MENU');
+                            }
+                        }}
+                        onCreate={createNewStaff}
+                        onDelete={deleteStaff}
+                    />
+                );
+            }
+
+            if (viewMode === 'MENU') {
+                return (
+                    <MenuPage
+                        staff={selectedStaffSummary}
+                        onResume={() => loadStaffData(selectedStaffSummary.id)}
+                        onNew={() => createNewFromSummary(selectedStaffSummary)}
+                        onHistory={() => {
+                            loadStaffData(selectedStaffSummary.id);
+                            setIsHistoryOpen(true);
+                        }}
+                        onBack={() => setViewMode('TOP')}
+                    />
+                );
+            }
+
+            // FORM VIEW
+            return (
+                <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg sm:max-w-2xl flex flex-col relative">
+                    <ScrollToTopButton />
+
+                    {/* --- HEADER --- */}
+                    <div className="bg-white sticky top-0 z-50 shadow-md print:hidden">
+                        <div className="p-3 flex justify-between items-center bg-blue-900 text-white gap-2">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                                <button onClick={() => setViewMode('TOP')} className="flex flex-col sm:flex-row items-center gap-1 p-2 hover:bg-blue-800 rounded-lg transition-colors flex-shrink-0">
+                                    <Store size={24} />
+                                    <span className="text-[10px] sm:text-xs font-bold leading-tight">TOPへ<br className="sm:hidden" />戻る</span>
+                                </button>
+                                <h1 className="text-sm sm:text-lg font-bold truncate">QB House Evaluation Sheet</h1>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {isReadOnly && (
+                                    <button onClick={handleEditMode} className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1">
+                                        <Lock size={14} /> 閲覧中(解除)
+                                    </button>
+                                )}
+                                <button onClick={() => setIsHistoryOpen(true)} className="p-2 hover:bg-blue-800 rounded transition-colors" title="履歴">
+                                    <History size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                            <div className="flex items-center gap-1 sm:gap-2">
+                                <button onClick={() => { if (currentId) saveToStorage(currentId, metadata, items, performanceScore); alert("保存しました"); }} className="flex flex-col items-center justify-center text-[10px] hover:bg-blue-800 p-1.5 rounded min-w-[32px] sm:min-w-[40px] transition-colors">
+                                    <Save size={18} />
+                                    <span>保存</span>
+                                </button>
+                                <button onClick={handleDownloadCSV} className="flex flex-col items-center justify-center text-[10px] hover:bg-blue-800 p-1.5 rounded min-w-[32px] sm:min-w-[40px] transition-colors">
+                                    <Download size={18} />
+                                    <span>CSV</span>
+                                </button>
+                                <button onClick={handleDownloadAllCSV} className="flex flex-col items-center justify-center text-[10px] hover:bg-blue-800 p-1.5 rounded min-w-[32px] sm:min-w-[40px] transition-colors">
+                                    <Users size={18} />
+                                    <span>一覧CSV</span>
+                                </button>
+                                <button onClick={handleBatchPrint} className="flex flex-col items-center justify-center text-[10px] hover:bg-blue-800 p-1.5 rounded min-w-[32px] sm:min-w-[40px] transition-colors">
+                                    <Layers size={18} />
+                                    <span>一括印刷</span>
+                                </button>
+                                <button onClick={handlePrint} className="flex flex-col items-center justify-center text-[10px] hover:bg-blue-800 p-1.5 rounded min-w-[32px] sm:min-w-[40px] transition-colors">
+                                    <Printer size={18} />
+                                    <span>印刷</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ScheduleAlert date={metadata.date} />
+
+                    <div className="bg-gray-50 border-b">
+                        <div className={`overflow-hidden transition-all duration-300 ${isDashboardCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
+                            <div className="p-2 sm:p-4">
+                                <ScoreDashboard items={items} performanceScore={performanceScore} performanceData={metadata.performance} isManagerUnlocked={isStoreManagerUnlocked} />
+                            </div>
+                        </div>
+                        <button onClick={() => setIsDashboardCollapsed(!isDashboardCollapsed)} className="w-full flex justify-center items-center py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-t border-b border-gray-300 font-bold text-xs transition-all">
+                            {isDashboardCollapsed ? "スコア内訳・詳細を表示 ↓" : "閉じる ↑"}
+                        </button>
+                    </div>
+
+
+                    {/* --- METADATA FORM --- */}
+                    <section className="p-3 sm:p-5 border-b bg-white print:hidden">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div className="grid grid-cols-2 gap-3 sm:col-span-2">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 mb-1">店舗名</label>
+                                    <input type="text" value={metadata.store} onChange={(e) => setMetadata({ ...metadata, store: e.target.value })} className="w-full border-b-2 border-gray-100 p-1 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500" placeholder="店舗名" disabled={isReadOnly} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 mb-1">スタッフ氏名</label>
+                                    <input type="text" value={metadata.name} onChange={(e) => setMetadata({ ...metadata, name: e.target.value })} className="w-full border-b-2 border-gray-100 p-1 text-sm font-bold outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500" placeholder="氏名" disabled={isReadOnly} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 mb-1">社員番号 (半角英数)</label>
+                                    <input type="text" value={metadata.employeeId} onChange={(e) => { const v = e.target.value; if (/^[a-zA-Z0-9]*$/.test(v)) setMetadata({ ...metadata, employeeId: v }); }} className="w-full border-b-2 border-gray-100 p-1 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500" disabled={isReadOnly} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 mb-1">評価者</label>
+                                    <input type="text" value={metadata.evaluator} onChange={(e) => setMetadata({ ...metadata, evaluator: e.target.value })} className="w-full border-b-2 border-gray-100 p-1 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500" disabled={isReadOnly} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 mb-1">日付</label>
+                                <input type="date" value={metadata.date} onChange={(e) => setMetadata({ ...metadata, date: e.target.value })} className="w-full border-b-2 border-gray-100 p-1 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500" disabled={isReadOnly} />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- CHART --- */}
+                    <section className="bg-gray-50 border-b print:hidden">
+                        <button onClick={() => setIsChartCollapsed(!isChartCollapsed)} className="w-full flex justify-between items-center p-3 bg-white border-b border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors">
+                            <span className="flex items-center gap-2"><BarChart3 size={20} className="text-blue-600" />評価分析チャート</span>
+                            {isChartCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                        </button>
+                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isChartCollapsed ? 'max-h-0' : 'max-h-[800px]'}`}>
+                            <div className="p-2 sm:p-4">
+                                <ChartSection
+                                    items={items}
+                                    performanceData={metadata.performance}
+                                    performanceScore={performanceScore}
+                                    comparisonItems={comparisonData?.items}
+                                    comparisonPerformanceScore={comparisonData?.performanceScore}
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- TABS --- */}
+                    <div className="flex z-40 bg-white shadow-sm overflow-x-auto no-print border-b">
+                        {CATEGORIES.map((cat) => (
+                            <button key={cat} onClick={() => handleTabChange(cat)} className={`flex-1 py-3 px-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${activeTab === cat ? 'border-blue-800 text-blue-900 bg-blue-50/50' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                                {cat}{cat === '店長' && !isStoreManagerUnlocked && <Lock size={12} />}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* --- MAIN CONTENT --- */}
+                    <main className="p-2 sm:p-4 pb-4 flex-grow bg-gray-50 print:bg-white print:p-0">
+                        {/* DISPLAY MODE (INPUT FORM) */}
+                        <div className="print:hidden">
+                            <CriteriaGuide />
+                            <div className="flex justify-end mb-4">
+                                <button onClick={() => {
+                                    if (window.confirm(`${activeTab}評価をリセットしますか？`)) {
+                                        if (activeTab === '実績') {
+                                            setMetadata(p => ({ ...p, performance: { ...p.performance, monthlyCuts: new Array(12).fill(0) } })); setPerformanceScore(5);
+                                        } else {
+                                            setItems(p => p.map(i => i.category === activeTab ? { ...i, score: [34, 58, 59].includes(i.no) ? 0 : null, memos: [], memo: '', incidents: [] } : i));
+                                        }
+                                    }
+                                }} className="text-xs flex items-center gap-1 text-gray-400 hover:text-red-500 bg-white px-2 py-1 rounded shadow-sm border"><RefreshCw size={12} /> この項目をリセット</button>
+                            </div>
+                            {activeTab === '実績' ? (
+                                <PerformanceEvaluation data={metadata.performance} onChange={handlePerformanceUpdate} onScoreUpdate={setPerformanceScore} readOnly={isReadOnly} />
+                            ) : (
+                                filteredItems.map((item) => (
+                                    <EvaluationCard key={item.no} item={item} onUpdate={handleUpdateScore} onUpdateMemo={handleUpdateMemo} onUpdateIncidents={handleUpdateIncidents} readOnly={isReadOnly} />
+                                ))
+                            )}
+                        </div>
+
+                        {/* --- ENHANCED PRINT LAYOUT --- */}
+                        {isBatchPrinting && batchPrintData.length > 0 && (
+                            <div className="batch-print-container">
+                                {renderBatchPrintContent()}
+                                <div className="page-break"></div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* --- SIDEBAR & MODALS --- */}
+                    <HistorySidebar
+                        isOpen={isHistoryOpen}
+                        onClose={() => setIsHistoryOpen(false)}
+                        historyList={historyList}
+                        currentId={currentId}
+                        onSelect={handleHistorySelect}
+                        onCompare={handleCompare}
+                        metadata={metadata}
+                    />
+                    <PasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} onUnlock={() => { setIsStoreManagerUnlocked(true); setActiveTab('店長'); }} />
+                </div >
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<React.StrictMode><App /></React.StrictMode>);
+
+    </script>
+</body>
+
+</html>
