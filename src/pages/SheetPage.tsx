@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { LuArrowLeft, LuHistory, LuPrinter, LuStore, LuUser, LuCalendar, LuTrendingUp, LuLock, LuUnlock, LuMessageSquare, LuArrowUp, LuX } from 'react-icons/lu';
 import {
     EvaluationItem as EvaluationItemType,
     INITIAL_ITEMS,
@@ -227,21 +228,21 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-4">
                             <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-600 print:hidden font-bold">
-                                [Back]
+                                <LuArrowLeft size={24} />
                             </button>
                             <h1 className="text-xl font-bold text-[#002C5F] hidden sm:block">評価シート編集</h1>
                         </div>
 
                         <div className="flex items-center gap-2 print:hidden">
                             <button onClick={() => setIsHistoryOpen(true)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-2 font-bold">
-                                [History] <span className="hidden sm:inline">履歴</span>
+                                <LuHistory size={20} /> <span className="hidden sm:inline">履歴</span>
                             </button>
                             <button onClick={handlePrint} className="p-2 text-[#002C5F] hover:bg-blue-50 rounded-lg flex items-center gap-2 font-bold">
-                                [Print] <span className="hidden sm:inline">印刷</span>
+                                <LuPrinter size={20} /> <span className="hidden sm:inline">印刷</span>
                             </button>
                             {comparisonData && (
                                 <button onClick={clearComparison} className="flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200 hover:bg-red-100">
-                                    [Copy] 比較中: {comparisonData.metadata.date} [X]
+                                    [Copy] 比較中: {comparisonData.metadata.date} <LuX size={12} />
                                 </button>
                             )}
                         </div>
@@ -252,7 +253,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">店舗名</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs">[Store]</span>
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs"><LuStore size={14} /></span>
                                 <input
                                     type="text"
                                     value={metadata.store}
@@ -266,7 +267,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">氏名</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs">[User]</span>
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs"><LuUser size={14} /></span>
                                 <input
                                     type="text"
                                     value={metadata.name}
@@ -360,8 +361,8 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >
-                                    {isLocked && <span className="text-xs">[Lock]</span>}
-                                    {!isLocked && cat === '店長' && <span className="text-xs text-blue-500">[Unlock]</span>}
+                                    {isLocked && <span className="text-xs"><LuLock size={12} /></span>}
+                                    {!isLocked && cat === '店長' && <span className="text-xs text-blue-500"><LuUnlock size={12} /></span>}
                                     {cat}
                                 </button>
                             );
@@ -396,7 +397,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        [Message] 面談記録シートを開く (別タブ)
+                        <LuMessageSquare size={18} /> 面談記録シートを開く (別タブ)
                     </a>
                 </div>
             </div>
@@ -421,7 +422,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                 onClick={scrollToTop}
                 className="fixed bottom-6 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors z-40 no-print opacity-80 print:hidden font-bold"
             >
-                [Top]
+                <LuArrowUp size={24} />
             </button>
         </div>
     );

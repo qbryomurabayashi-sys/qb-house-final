@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { StaffSummary } from '../types';
+import { LuUsers, LuPlus, LuDownload, LuUpload, LuUser, LuStore, LuCalendar, LuChevronRight, LuTrash } from 'react-icons/lu';
 
 interface TopPageProps {
     staffList: StaffSummary[];
@@ -56,11 +57,11 @@ export const TopPage: React.FC<TopPageProps> = ({ staffList, onSelect, onCreate,
                         <p className="text-xs text-blue-200 mt-1">スタッフ一覧</p>
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={handleExport} className="p-2 bg-blue-800 rounded text-xs hover:bg-blue-700">
-                            [Download]
+                        <button onClick={handleExport} className="p-2 bg-blue-800 rounded text-xs hover:bg-blue-700 flex items-center gap-1">
+                            <LuDownload size={14} /> <span>JSON出力</span>
                         </button>
-                        <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-blue-800 rounded text-xs hover:bg-blue-700">
-                            [Upload]
+                        <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-blue-800 rounded text-xs hover:bg-blue-700 flex items-center gap-1">
+                            <LuUpload size={14} /> <span>JSON読込</span>
                         </button>
                         <input
                             type="file"
@@ -76,19 +77,19 @@ export const TopPage: React.FC<TopPageProps> = ({ staffList, onSelect, onCreate,
             <main className="p-6 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <span>[Users]</span> スタッフリスト
+                        <LuUsers className="text-[#002C5F]" /> <span>スタッフリスト</span>
                     </h2>
                     <button
                         onClick={onCreate}
                         className="bg-[#E60012] text-white px-6 py-3 rounded-full shadow-lg font-bold flex items-center gap-2 hover:bg-red-600 transition-all hover:scale-105 active:scale-95"
                     >
-                        <span>[Plus]</span> 新規作成
+                        <LuPlus size={20} /> <span>新規作成</span>
                     </button>
                 </div>
 
                 {staffList.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
-                        <div className="text-gray-300 mb-4 text-4xl">[User]</div>
+                        <div className="text-gray-300 mb-4 text-4xl flex justify-center"><LuUser size={48} /></div>
                         <p className="text-gray-500 font-bold mb-2">スタッフが登録されていません</p>
                         <p className="text-sm text-gray-400">「新規作成」ボタンから評価を開始してください</p>
                     </div>
@@ -112,10 +113,10 @@ export const TopPage: React.FC<TopPageProps> = ({ staffList, onSelect, onCreate,
                                             </h3>
                                             <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                                                 <span className="flex items-center gap-1">
-                                                    [Store] {staff.store || '店舗未設定'}
+                                                    <LuStore size={12} /> {staff.store || '店舗未設定'}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    [Calendar] {new Date(staff.updatedAt).toLocaleDateString('ja-JP')}
+                                                    <LuCalendar size={12} /> {new Date(staff.updatedAt).toLocaleDateString('ja-JP')}
                                                 </span>
                                             </div>
                                         </div>
@@ -131,7 +132,7 @@ export const TopPage: React.FC<TopPageProps> = ({ staffList, onSelect, onCreate,
                                     }}
                                     className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
                                 >
-                                    <span>[Trash]</span>
+                                    <LuTrash size={18} />
                                 </button>
                             </div>
                         ))}

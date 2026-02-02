@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/Select';
 
 import { generateUUID } from '../../utils/evaluationUtils';
 // import { MessageSquare, AlertTriangle, Check, BookOpen, AlertCircle, X } from 'lucide-react';
+import { LuHelpCircle, LuX, LuAlertTriangle } from 'react-icons/lu';
 
 interface EvaluationItemProps {
     item: EvaluationItemType;
@@ -87,7 +88,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                     {/* Point Description / Hover Help */}
                     {item.pointDesc && (
                         <div className="mt-2 pl-8 text-xs text-blue-600 flex items-start gap-1">
-                            <span className="mt-0.5 shrink-0 font-bold">[?]</span>
+                            <span className="mt-0.5 shrink-0 font-bold"><LuHelpCircle size={14} /></span>
                             <span>{item.pointDesc}</span>
                         </div>
                     )}
@@ -119,7 +120,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                             <div key={inc.id} className="p-3 bg-red-50 rounded border border-red-100 relative">
                                 {!readOnly && (
                                     <button onClick={() => removeIncident(inc.id)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold">
-                                        [X]
+                                        <LuX size={16} />
                                     </button>
                                 )}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
@@ -189,7 +190,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                                 onClick={addIncident}
                                 className="w-full py-2 bg-red-100 text-red-700 font-bold rounded hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm"
                             >
-                                <span>[!]</span> 事案を追加
+                                <span><LuAlertTriangle size={16} /></span> 事案を追加
                             </button>
                         )}
                     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-// import { Bell } from 'lucide-react';
+import { LuBell } from 'react-icons/lu';
 
 interface ScheduleAlertProps {
     date: string;
@@ -22,7 +22,7 @@ export const ScheduleAlert: React.FC<ScheduleAlertProps> = ({ date }) => {
 
     return (
         <div className={`mx-3 sm:mx-5 mt-4 p-3 rounded-lg border flex items-start gap-3 shadow-sm ${bgClass} print:hidden`}>
-            <span className={`shrink-0 mt-0.5 font-bold ${iconClass}`}>[!]</span>
+            <span className={`shrink-0 mt-0.5 font-bold ${iconClass}`}><LuBell size={18} /></span>
             <div>
                 <div className="font-bold flex items-center gap-2">
                     <span>{month}月: {alert.title}</span>

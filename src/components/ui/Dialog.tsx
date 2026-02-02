@@ -1,5 +1,5 @@
 import * as React from "react"
-// import { X } from 'lucide-react'
+import { LuX } from "react-icons/lu"
 import { cn } from "@/lib/utils"
 
 interface DialogProps {
@@ -18,7 +18,7 @@ export const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children
                 <div className="flex items-center justify-between p-6 border-b border-slate-100">
                     <h3 className="text-xl font-bold tracking-tight text-slate-900">{title}</h3>
                     <button onClick={onClose} className="rounded-full p-2 hover:bg-slate-100 transition-colors font-bold">
-                        [X]
+                        <LuX size={20} />
                     </button>
                 </div>
                 <div className="p-6">

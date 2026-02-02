@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 // import { History, X, Folder, FolderOpen, FileText, Layers } from 'lucide-react';
+import { LuHistory, LuX, LuFolder, LuFolderOpen, LuLayers } from 'react-icons/lu';
 import { HistoryRecord, Metadata } from '../../types';
 
 interface HistorySidebarProps {
@@ -91,10 +92,10 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 <div className="p-4 bg-gray-50 border-b flex-shrink-0">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            [Hist] 評価履歴
+                            <LuHistory size={20} /> 評価履歴
                         </h3>
                         <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors font-bold">
-                            [X]
+                            <LuX size={20} />
                         </button>
                     </div>
                     {metadata && (
@@ -133,7 +134,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                             onClick={() => toggleTerm(term)}
                                             className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer text-sm font-bold text-gray-700"
                                         >
-                                            {isTermOpen ? <span>[-]</span> : <span>[+]</span>}
+                                            {isTermOpen ? <span><LuFolderOpen size={16} /></span> : <span><LuFolder size={16} /></span>}
                                             <span>{term}</span>
                                         </div>
 
@@ -152,7 +153,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                                 onClick={() => toggleMonth(month)}
                                                                 className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-600"
                                                             >
-                                                                {isMonthOpen ? <span>[-]</span> : <span>[+]</span>}
+                                                                {isMonthOpen ? <span><LuFolderOpen size={14} /></span> : <span><LuFolder size={14} /></span>}
                                                                 <span>{month} <span className="text-xs text-gray-400">({records.length})</span></span>
                                                             </div>
 
@@ -210,7 +211,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                                                     onClick={(e) => { e.stopPropagation(); onCompare(record); }}
                                                                                     className="text-[10px] px-2 py-1 bg-purple-50 text-purple-700 rounded hover:bg-purple-100 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity font-bold"
                                                                                 >
-                                                                                    [Comp] 比較
+                                                                                    <LuLayers size={14} /> 比較
                                                                                 </button>
                                                                             </div>
                                                                         </div>

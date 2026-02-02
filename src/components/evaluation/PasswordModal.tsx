@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // import { X } from 'lucide-react';
+import { LuX } from 'react-icons/lu';
 
 interface PasswordModalProps {
     isOpen: boolean;
@@ -37,7 +38,7 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({ isOpen, onClose, o
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-gray-900">店長評価ロック解除</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-bold">
-                        [X]
+                        <LuX size={20} />
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
