@@ -125,7 +125,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({ initialData, isOpen, o
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={onClose}>キャンセル</Button>
-                    <Button type="submit">保存する</Button>
+                    <Button type="submit" className="bg-[#002C5F] hover:bg-[#001F45] text-white">保存する</Button>
                 </div>
             </form>
         </Dialog>

@@ -43,6 +43,9 @@ export default function InterviewPage({ onBack, context }: InterviewPageProps) {
     // Load all data from localStorage or use Mock if empty
     const [allData, setAllData] = useState<MeetingRecord[]>(() => {
         const saved = localStorage.getItem(DATA_KEY);
+        // Note: For real usage, we should filter by ID here or in the render to avoid leaking data, 
+        // but for now we trust filtered 'data' memo.
+        // Also, load mock data only if absolutely empty? Or always load mock if empty?
         return saved ? JSON.parse(saved) : MOCK_DATA;
     });
 
@@ -139,36 +142,76 @@ export default function InterviewPage({ onBack, context }: InterviewPageProps) {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+            {/* Header with Premium Blue Theme */}
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-500 hover:text-slate-900 font-bold">
+                        <Button variant="ghost" size="sm" onClick={onBack} className="text-gray-500 hover:text-[#002C5F] font-bold hover:bg-blue-50">
                             <LuArrowLeft className="mr-2 h-4 w-4" /> 評価へ戻る
                         </Button>
-                        <div className="flex items-center gap-2 text-slate-900 font-bold text-lg"><LuFileText className="h-5 w-5" /> 面談報告書アプリ</div>
+                        <div className="flex items-center gap-2 text-[#002C5F] font-bold text-lg">
+                            <LuFileText className="h-6 w-6" /> 面談報告書・記録
+                        </div>
                     </div>
                     <div className="flex gap-4">
-                        <div className="relative"><span className="absolute left-2.5 top-2.5 text-xs text-slate-400"><LuSearch size={14} /></span><Input className="pl-9 w-64 bg-slate-50 border-slate-200" placeholder="検索..." value={globalFilter} onChange={e => setGlobalFilter(e.target.value)} /></div>
-                        <Button onClick={handleCreate}><LuPlus className="mr-2 h-4 w-4" /> 新規作成</Button>
+                        <div className="relative">
+                            <span className="absolute left-2.5 top-2.5 text-xs text-gray-400"><LuSearch size={14} /></span>
+                            <Input
+                                className="pl-9 w-64 bg-gray-50 border-gray-200 focus:ring-[#002C5F] focus:border-[#002C5F]"
+                                placeholder="報告書を検索..."
+                                value={globalFilter}
+                                onChange={e => setGlobalFilter(e.target.value)}
+                            />
+                        </div>
+                        <Button onClick={handleCreate} className="bg-[#002C5F] hover:bg-[#001F45] text-white font-bold shadow-sm">
+                            <LuPlus className="mr-2 h-4 w-4" /> 新規作成
+                        </Button>
                     </div>
                 </div>
             </header>
+
             <main className="flex-1 max-w-7xl mx-auto w-full p-6">
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+                {/* Staff Context Banner */}
+                <div className="bg-[#002C5F] text-white rounded-lg p-4 mb-6 shadow-md flex items-center justify-between">
+                    <div>
+                        <div className="text-xs opacity-80">対象スタッフ</div>
+                        <div className="text-xl font-bold flex items-end gap-2">
+                            {context.name} <span className="text-sm font-normal opacity-80">({context.store})</span>
+                        </div>
+                    </div>
+                    <div className="bg-white/10 px-4 py-2 rounded text-sm text-center">
+                        <div className="text-xs opacity-70">社員番号</div>
+                        <div className="font-mono font-bold">{context.employeeId}</div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+                        <thead className="bg-[#f8fafc] border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-xs">
                             {table.getHeaderGroups().map(hg => (
                                 <tr key={hg.id}>
-                                    {hg.headers.map(h => <th key={h.id} className="h-10 px-4 align-middle">{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</th>)}
+                                    {hg.headers.map(h => <th key={h.id} className="h-12 px-6 align-middle">{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</th>)}
                                 </tr>
                             ))}
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {table.getRowModel().rows.map(row => (
-                                <tr key={row.id} className="hover:bg-slate-50/50 relative">
-                                    {row.getVisibleCells().map(cell => <td key={cell.id} className="p-4 align-middle relative">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}
+                        <tbody className="divide-y divide-gray-100">
+                            {table.getRowModel().rows.length > 0 ? (
+                                table.getRowModel().rows.map(row => (
+                                    <tr key={row.id} className="hover:bg-blue-50/30 transition-colors relative group">
+                                        {row.getVisibleCells().map(cell => <td key={cell.id} className="p-4 px-6 align-middle relative">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={columns.length} className="p-12 text-center text-gray-400">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <LuFileText size={48} className="opacity-20" />
+                                            <p>表示できる面談記録がありません</p>
+                                            <Button variant="outline" size="sm" onClick={handleCreate}>新規作成する</Button>
+                                        </div>
+                                    </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>
