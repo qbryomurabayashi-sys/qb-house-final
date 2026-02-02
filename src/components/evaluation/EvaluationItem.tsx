@@ -9,7 +9,7 @@ import { Select } from '@/components/ui/Select';
 
 import { generateUUID } from '../../utils/evaluationUtils';
 // import { MessageSquare, AlertTriangle, Check, BookOpen, AlertCircle, X } from 'lucide-react';
-import { LuHelpCircle, LuX, LuAlertTriangle } from 'react-icons/lu';
+import { LuCircleHelp, LuX, LuTriangleAlert } from 'react-icons/lu';
 
 interface EvaluationItemProps {
     item: EvaluationItemType;
@@ -88,7 +88,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                     {/* Point Description / Hover Help */}
                     {item.pointDesc && (
                         <div className="mt-2 pl-8 text-xs text-blue-600 flex items-start gap-1">
-                            <span className="mt-0.5 shrink-0 font-bold"><LuHelpCircle size={14} /></span>
+                            <span className="mt-0.5 shrink-0 font-bold"><LuCircleHelp size={14} /></span>
                             <span>{item.pointDesc}</span>
                         </div>
                     )}
@@ -190,7 +190,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                                 onClick={addIncident}
                                 className="w-full py-2 bg-red-100 text-red-700 font-bold rounded hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm"
                             >
-                                <span><LuAlertTriangle size={16} /></span> 事案を追加
+                                <span><LuTriangleAlert size={16} /></span> 事案を追加
                             </button>
                         )}
                     </div>

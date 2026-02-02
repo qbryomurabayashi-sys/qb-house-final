@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 // import { CheckSquare, Square, Calculator } from 'lucide-react';
-import { LuCheckSquare, LuSquare, LuCalculator } from 'react-icons/lu';
+import { LuSquareCheck, LuSquare, LuCalculator } from 'react-icons/lu';
 import { MONTHS } from '../../data/constants';
 import { calculatePerformanceMetrics } from '../../utils/evaluationUtils';
 import { PerformanceData } from '../../types';
@@ -99,7 +99,7 @@ export const PerformanceEvaluation: React.FC<PerformanceEvaluationProps> = ({
                                     disabled={readOnly}
                                     className={`flex items-center justify-center gap-1 text-[10px] py-1 px-1 rounded transition-colors ${!isExcluded ? 'bg-[#E6F0FA] text-[#002C5F] font-bold border border-[#BFD8F2]' : 'bg-gray-200 text-gray-500 border border-gray-300'}`}
                                 >
-                                    {!isExcluded ? <span><LuCheckSquare size={14} /></span> : <span><LuSquare size={14} /></span>}
+                                    {!isExcluded ? <span><LuSquareCheck size={14} /></span> : <span><LuSquare size={14} /></span>}
                                     {isExcluded ? '除外' : '平均計算'}
                                 </button>
                             </div>

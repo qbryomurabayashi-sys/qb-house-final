@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // import { MinusCircle, PlusCircle, ChevronDown } from 'lucide-react';
-import { LuMinusCircle, LuPlusCircle, LuChevronDown } from 'react-icons/lu';
+import { LuCircleMinus, LuCirclePlus, LuChevronDown } from 'react-icons/lu';
 
 export const CriteriaGuide = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +16,7 @@ export const CriteriaGuide = () => {
                     }`}
             >
                 <span className="flex items-center gap-2">
-                    {isOpen ? <span><LuMinusCircle size={16} /></span> : <span><LuPlusCircle size={16} /></span>}
+                    {isOpen ? <span><LuCircleMinus size={16} /></span> : <span><LuCirclePlus size={16} /></span>}
                     <span>4段階評価基準ガイド{isOpen ? 'を閉じる' : 'を開く'}</span>
                 </span>
                 <span className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}><LuChevronDown size={16} /></span>
