@@ -2,80 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-    .no-print {
-        @media print {
-            display: none !important;
-        }
-    }
-}
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-@media print {
-    @page { margin: 10mm; size: A4 portrait; }
-    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .print\:hidden { display: none !important; }
-    .print\:bg-white { background-color: white !important; }
-    .print\:p-0 { padding: 0 !important; }
-    .page-break { page-break-before: always; }
-    .print-break-inside-avoid { break-inside: avoid; }
-    
-    /* Optimize font size for print */
-    .print-text-sm { font-size: 8pt; }
-    .print-text-xs { font-size: 7pt; }
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Chart specific adjustments for print */
-    .print-chart-container {
-        width: 100% !important;
-        height: 180px !important; /* Fixed height for consistent layout */
-    }
-    .print-chart-box {
-        break-inside: avoid;
-    }
-    
-    /* Layout adjustments */
-    .print-view-container {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    /* Grid layout for detailed items */
-    .print-grid-cols-3 {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 4px;
-    }
-
-    /* Compact list items */
-    .detail-item-box {
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 2px;
-        margin-bottom: 2px;
-        break-inside: avoid;
-    }
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
-
-/* Range Input Custom Styling */
-input[type=range] {
-    -webkit-appearance: none; 
-    background: transparent; 
-}
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-}
-input[type=range]:focus {
-    outline: none; 
-}
-input[type=range]::-ms-track {
-    width: 100%; cursor: pointer; background: transparent; border-color: transparent; color: transparent;
-}
-/* Thumb Styling */
-.range-thumb-blue::-webkit-slider-thumb {
-    height: 16px; width: 16px; border-radius: 50%; background: #2563EB; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-.range-thumb-red::-webkit-slider-thumb {
-    height: 16px; width: 16px; border-radius: 50%; background: #DC2626; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-/* Track Styling */
-.range-track-gray::-webkit-slider-runnable-track {
-    width: 100%; height: 4px; cursor: pointer; background: #E5E7EB; border-radius: 2px;
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

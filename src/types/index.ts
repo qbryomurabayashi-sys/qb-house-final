@@ -1,28 +1,4 @@
-
-export interface EvaluationItem {
-    no: number;
-    category: string;
-    subCategory: string;
-    item: string;
-    axis: string;
-    max: number;
-    score: number | null;
-    desc: string;
-    pointDesc?: string;
-    criteria?: { [key: number]: string };
-    validScores?: number[];
-    memo?: string;
-    memos?: string[];
-    incidents?: Incident[];
-}
-
-export interface Incident {
-    id: string;
-    date: string;
-    desc: string;
-    deduction: number;
-    improvement: number;
-}
+import { EvaluationItem } from '../data/constants';
 
 export interface PerformanceData {
     monthlyCuts: number[];
@@ -32,7 +8,7 @@ export interface PerformanceData {
     monthlyHolidays: number;
 }
 
-export interface StaffMetadata {
+export interface Metadata {
     id: string;
     store: string;
     name: string;
@@ -43,11 +19,11 @@ export interface StaffMetadata {
     performance: PerformanceData;
 }
 
-export interface StaffData {
-    metadata: StaffMetadata;
+export interface EvaluationData {
+    metadata: Metadata;
     items: EvaluationItem[];
     performanceScore: number;
-    comparison?: StaffData; // Recursive for comparison
+    comparison?: EvaluationData; // For comparison view
 }
 
 export interface StaffSummary {
@@ -56,4 +32,16 @@ export interface StaffSummary {
     store: string;
     date: string;
     updatedAt: number;
+}
+
+export interface HistoryRecord extends StaffSummary {
+    performanceScore: number;
+    relationScore: number;
+    serviceScore: number;
+    techScore: number;
+    managerScore: number;
+    totalScore: number;
+    isManager: boolean;
+    evaluator: string;
+    employeeId: string;
 }

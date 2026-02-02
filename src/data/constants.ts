@@ -1,5 +1,4 @@
-
-export const CATEGORIES = ['関係性', '接客', '技術', '実績', '店長']; // Assuming these were strings in original
+export const CATEGORIES = ['関係性', '接客', '技術', '実績', '店長'];
 export const AXES = ['マインド', 'チームワーク', '接客プロセス', '提案・対応', '技術力', '実績'];
 export const MANAGER_AXES = ['運営管理スキル', '顧客サービススキル', 'チームマネジメントスキル', '戦略思考スキル', '問題解決スキル', '個人の属性', '管理責任・コンプライアンス'];
 export const MONTH_LABELS = ['7月', '8月', '9月', '10月', '11月', '12月', '1月', '2月', '3月', '4月', '5月', '6月'];
@@ -33,7 +32,32 @@ export const IMPROVEMENT_OPTS = [
     { score: 0, label: "0点", desc: "特になし" }
 ];
 
-export const INITIAL_ITEMS = [
+export interface Incident {
+    id: string;
+    date: string;
+    desc: string;
+    deduction: number;
+    improvement: number;
+}
+
+export interface EvaluationItem {
+    no: number;
+    category: string;
+    subCategory: string;
+    item: string;
+    axis: string;
+    max: number;
+    score: number | null;
+    desc: string;
+    pointDesc?: string;
+    validScores?: number[];
+    criteria?: Record<number, string>;
+    memo?: string;
+    memos?: string[]; // Legacy support or if needed
+    incidents?: Incident[];
+}
+
+export const INITIAL_ITEMS: EvaluationItem[] = [
     // --- 関係性 ---
     { no: 1, category: '関係性', subCategory: '経営理念', item: '理念', axis: 'マインド', max: 3, score: null, desc: '理念を理解して言えるか、覚えているか', pointDesc: '社員が経営理念をどれだけ理解し、日常業務にどのように活かしているかを測定するもので、経営理念は組織の基本であり、この評価は社員の組織への貢献と一致度を反映します。', criteria: { 3: "経営理念を深く理解しており、自分の言葉で説明できる。組織の意思決定や日々の業務に積極的に取り入れている。", 2: "経営理念を正確に覚えており、その内容を説明できる。自分の業務に結びつけて参照し、実践している。", 1: "経営理念の基本的な内容は理解しているが、詳細な説明が難しい。日常業務に適切に組み込むことができていない。", 0: "経営理念を正確に覚えておらず、その内容を説明できない。業務との関連性を理解していない。" } },
     { no: 2, category: '関係性', subCategory: 'スタッフ・コミュニケーション', item: '挨拶', axis: 'マインド', max: 3, score: null, desc: '仲間に対して笑顔を意識し、自ら進んで挨拶をおこなっている', pointDesc: '挨拶の頻度、笑顔の有無、積極性、および一貫性に重点を置き、挨拶がコミュニケーションの基本としてチームワークと職場の雰囲気に与える影響を評価します。', criteria: { 3: "常に笑顔を意識し、自ら積極的に挨拶を行っている。ポジティブな職場環境を作り出している。", 2: "一貫して笑顔で挨拶を行い、周囲に対してフレンドリーな態度を示している。", 1: "挨拶をすることはあるが、常に笑顔や積極性に欠ける。時には挨拶を怠ることがある。", 0: "他のスタッフに対してほとんど挨拶をしない。笑顔が少なく、職場の雰囲気に貢献していない。" } },
