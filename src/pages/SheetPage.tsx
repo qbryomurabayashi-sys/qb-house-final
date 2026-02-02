@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { LuArrowLeft, LuHistory, LuPrinter, LuStore, LuUser, LuCalendar, LuTrendingUp, LuLock, LuUnlock, LuMessageSquare, LuArrowUp, LuX } from 'react-icons/lu';
+import { LuArrowLeft, LuHistory, LuPrinter, LuStore, LuUser, LuCalendar, LuTrendingUp, LuLock, LuLockOpen, LuMessageSquare, LuArrowUp, LuX } from 'react-icons/lu';
 import {
     EvaluationItem as EvaluationItemType,
     INITIAL_ITEMS,
@@ -362,7 +362,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                                         }`}
                                 >
                                     {isLocked && <span className="text-xs"><LuLock size={12} /></span>}
-                                    {!isLocked && cat === '店長' && <span className="text-xs text-blue-500"><LuUnlock size={12} /></span>}
+                                    {!isLocked && cat === '店長' && <span className="text-xs text-blue-500"><LuLockOpen size={12} /></span>}
                                     {cat}
                                 </button>
                             );
