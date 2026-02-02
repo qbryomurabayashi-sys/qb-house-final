@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { CheckSquare, Square, Calculator } from 'lucide-react';
+import React, { useEffect } from 'react';
+// import { CheckSquare, Square, Calculator } from 'lucide-react';
 import { MONTHS } from '../../data/constants';
 import { calculatePerformanceMetrics } from '../../utils/evaluationUtils';
 import { PerformanceData } from '../../types';
@@ -98,7 +98,7 @@ export const PerformanceEvaluation: React.FC<PerformanceEvaluationProps> = ({
                                     disabled={readOnly}
                                     className={`flex items-center justify-center gap-1 text-[10px] py-1 px-1 rounded transition-colors ${!isExcluded ? 'bg-[#E6F0FA] text-[#002C5F] font-bold border border-[#BFD8F2]' : 'bg-gray-200 text-gray-500 border border-gray-300'}`}
                                 >
-                                    {!isExcluded ? <CheckSquare size={10} /> : <Square size={10} />}
+                                    {!isExcluded ? <span>[v]</span> : <span>[ ]</span>}
                                     {isExcluded ? '除外' : '平均計算'}
                                 </button>
                             </div>
@@ -150,7 +150,7 @@ export const PerformanceEvaluation: React.FC<PerformanceEvaluationProps> = ({
 
             <div className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm no-print print:hidden">
                 <h3 className="font-bold text-base sm:text-lg text-gray-700 mb-4 flex items-center gap-2">
-                    <Calculator size={18} /> 勤務・生産性試算
+                    <span>[Calc]</span> 勤務・生産性試算
                 </h3>
                 <div className="flex items-end gap-4 mb-4">
                     <div className="flex-grow">

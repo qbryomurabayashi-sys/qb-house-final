@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+// import { X } from 'lucide-react';
 
 interface PasswordModalProps {
     isOpen: boolean;
@@ -36,8 +36,8 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({ isOpen, onClose, o
             <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-gray-900">店長評価ロック解除</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X size={24} />
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-bold">
+                        [X]
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">

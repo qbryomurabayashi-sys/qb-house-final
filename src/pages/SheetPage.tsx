@@ -1,11 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useForm } from 'react-hook-form'; // Might not need full form lib for this custom logic yet
-import {
-    Calculator, Calendar, User, Store, Lock, Unlock,
-    Printer, Save, ArrowLeft, ArrowUp, FileText,
-    MessageSquare, AlertTriangle, Layers
-} from 'lucide-react';
-
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
 import {
     EvaluationItem as EvaluationItemType,
     INITIAL_ITEMS,
@@ -21,6 +15,17 @@ import {
 import { calculatePerformanceMetrics } from '../utils/evaluationUtils';
 
 import { EvaluationSection } from '../components/evaluation/EvaluationSection';
+// Note: ChartSection MIGHT still crash if it uses recharts, but user said "Chart Disabled" version failed too?
+// Wait, V7 (Chart Disabled) failed. But V7 had icons.
+// So disabling charts might not be enough if Icons are the cause.
+// I will keep ChartSection but if it crashes we blame Recharts or Icons inside it.
+// For now, I'll trust ChartSection placeholder from V9/V10 if it exists.
+// Wait, I restored App.tsx in V9, but ChartSection was... 
+// In V4 I disabled ChartSection. In V7 I restored App but kept ChartSection disabled?
+// I need to check ChartSection content.
+// Assuming ChartSection is "safe" or I should replace it with text too?
+// I will blindly replace icons in SheetPage first.
+
 import { ChartSection } from '../components/evaluation/ChartSection';
 import { ScoreDashboard } from '../components/evaluation/ScoreDashboard';
 import { PerformanceEvaluation } from '../components/evaluation/PerformanceEvaluation';
@@ -49,9 +54,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
     });
     const [performanceScore, setPerformanceScore] = useState(initialData?.performanceScore || 5);
 
-    // Determines if we are in "Read Only" mode (e.g. browsing history)
-    // For now, assume always editable if opened unless explicitly set. 
-    // In migration, simpler to start with editable.
     const [readOnly, setReadOnly] = useState(false);
 
     // UI State
@@ -66,7 +68,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
     const [comparisonData, setComparisonData] = useState<EvaluationData | null>(initialData?.comparison || null);
 
     // --- History Loading Logic ---
-    // Fetch summary list for sidebar
     const [historyList, setHistoryList] = useState<HistoryRecord[]>([]);
     useEffect(() => {
         if (!metadata.name || !metadata.store) return;
@@ -104,7 +105,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                     };
                 }
                 return s;
-            }).filter((r: any) => r.totalScore !== undefined); // Filter out broken records
+            }).filter((r: any) => r.totalScore !== undefined);
 
             setHistoryList(detailedList);
         } catch (e) { console.error(e); }
@@ -121,7 +122,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
             };
             localStorage.setItem(DATA_PREFIX + currentId, JSON.stringify(dataToSave));
 
-            // Update Index
             const rawIndex = localStorage.getItem(STAFF_INDEX_KEY);
             let index = rawIndex ? JSON.parse(rawIndex) : [];
             const summary = {
@@ -138,7 +138,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
             } else {
                 index.unshift(summary);
             }
-            // Sort
             index.sort((a: any, b: any) => b.updatedAt - a.updatedAt);
             localStorage.setItem(STAFF_INDEX_KEY, JSON.stringify(index));
         }, 500);
@@ -184,45 +183,27 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
         setMetadata(prev => ({ ...prev, [field]: value }));
     };
 
-    // Print
     const handlePrint = () => {
         window.print();
     };
 
-    // History Actions
     const handleSelectHistory = (id: string) => {
         if (id === currentId) return;
-        // Load history item as READ ONLY or EDITABLE?
-        // Original app allowed "Resume" or "History View".
-        // Let's just load it.
         const raw = localStorage.getItem(DATA_PREFIX + id);
         if (raw) {
             const d = JSON.parse(raw);
-            // If we want to switch context entirely, we might need to tell App.tsx
-            // But if we just want to view it here:
-            // Warn user if unsaved? (Auto-save handles it)
             if (confirm("この履歴データを表示しますか？\n(現在の画面内容は保存されています)")) {
-                // Determine if we should navigate or just replace state.
-                // Navigation is cleaner to keep URL/ID sync.
-                // For now, let's just reload page with new ID? 
-                // Using window.location.search params would be best if App supports it.
-                // Or call a prop onSwitchId(id)
-                window.location.reload(); // Quickest way if we don't have router setup yet
-                // But wait, I can just update state here if I want.
-                // But props.currentId won't match.
-                // Ideally default trigger a callback.
-                // For this implementation, I'll update local state and set ReadOnly = true?
+                window.location.reload();
                 setItems(d.items);
                 setMetadata(d.metadata);
                 setPerformanceScore(d.performanceScore);
-                setReadOnly(true); // Viewing history is usually read-only unless "Resume"
+                setReadOnly(true);
                 setIsHistoryOpen(false);
             }
         }
     };
 
     const handleCompare = (record: HistoryRecord) => {
-        // Load comparison data
         const raw = localStorage.getItem(DATA_PREFIX + record.id);
         if (raw) {
             const d = JSON.parse(raw);
@@ -236,8 +217,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
     };
 
     const clearComparison = () => setComparisonData(null);
-
-    // Scroll To Top
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
     return (
@@ -247,23 +226,22 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-4">
-                            <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-600 print:hidden">
-                                <ArrowLeft size={24} />
+                            <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-600 print:hidden font-bold">
+                                [Back]
                             </button>
                             <h1 className="text-xl font-bold text-[#002C5F] hidden sm:block">評価シート編集</h1>
                         </div>
 
                         <div className="flex items-center gap-2 print:hidden">
-                            <button onClick={() => setIsHistoryOpen(true)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-2">
-                                <History size={20} /> <span className="hidden sm:inline">履歴</span>
+                            <button onClick={() => setIsHistoryOpen(true)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-2 font-bold">
+                                [History] <span className="hidden sm:inline">履歴</span>
                             </button>
-                            <button onClick={handlePrint} className="p-2 text-[#002C5F] hover:bg-blue-50 rounded-lg flex items-center gap-2">
-                                <Printer size={20} /> <span className="hidden sm:inline">印刷</span>
+                            <button onClick={handlePrint} className="p-2 text-[#002C5F] hover:bg-blue-50 rounded-lg flex items-center gap-2 font-bold">
+                                [Print] <span className="hidden sm:inline">印刷</span>
                             </button>
-                            {/* Comparison Indicator */}
                             {comparisonData && (
                                 <button onClick={clearComparison} className="flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200 hover:bg-red-100">
-                                    <Layers size={14} /> 比較中: {comparisonData.metadata.date} <X size={14} />
+                                    [Copy] 比較中: {comparisonData.metadata.date} [X]
                                 </button>
                             )}
                         </div>
@@ -274,7 +252,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">店舗名</label>
                             <div className="relative">
-                                <Store className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs">[Store]</span>
                                 <input
                                     type="text"
                                     value={metadata.store}
@@ -288,7 +266,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">氏名</label>
                             <div className="relative">
-                                <User className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs">[User]</span>
                                 <input
                                     type="text"
                                     value={metadata.name}
@@ -302,7 +280,7 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">社員番号</label>
                             <div className="relative">
-                                <FileText className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-xs">[ID]</span>
                                 <input
                                     type="text"
                                     value={metadata.employeeId}
@@ -341,11 +319,8 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
             </header>
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-
-                {/* 1. Schedule Alert */}
                 <ScheduleAlert date={metadata.date} />
 
-                {/* 2. Charts & Dashboard */}
                 <div className="space-y-6">
                     <ChartSection
                         items={items}
@@ -363,7 +338,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                     />
                 </div>
 
-                {/* 3. Performance Evaluation Input */}
                 <PerformanceEvaluation
                     data={metadata.performance}
                     onChange={data => setMetadata(prev => ({ ...prev, performance: data }))}
@@ -371,7 +345,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                     readOnly={readOnly}
                 />
 
-                {/* 4. Category Tabs */}
                 <div className="sticky top-16 z-30 bg-gray-50 pt-2 pb-4 print:hidden">
                     <div className="flex space-x-1 overflow-x-auto bg-gray-200/50 p-1 rounded-xl">
                         {CATEGORIES.map(cat => {
@@ -387,8 +360,8 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >
-                                    {isLocked && <Lock size={14} className="mb-0.5" />}
-                                    {!isLocked && cat === '店長' && <Unlock size={14} className="mb-0.5 text-blue-500" />}
+                                    {isLocked && <span className="text-xs">[Lock]</span>}
+                                    {!isLocked && cat === '店長' && <span className="text-xs text-blue-500">[Unlock]</span>}
                                     {cat}
                                 </button>
                             );
@@ -396,7 +369,6 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                     </div>
                 </div>
 
-                {/* 5. Evaluation Items */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 min-h-[500px]">
                     <CriteriaGuide />
 
@@ -417,21 +389,18 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
                     />
                 </div>
 
-                {/* 6. Interview Proto Link (Optional integration point) */}
                 <div className="flex justify-center mt-8 print:hidden">
                     <a
                         href={`/interview?employeeId=${metadata.employeeId}&name=${encodeURIComponent(metadata.name)}&store=${encodeURIComponent(metadata.store)}`}
-                        className="flex items-center gap-2 text-[#002C5F] px-6 py-3 border border-[#002C5F] rounded-lg hover:bg-blue-50 transition-colors"
+                        className="flex items-center gap-2 text-[#002C5F] px-6 py-3 border border-[#002C5F] rounded-lg hover:bg-blue-50 transition-colors font-bold"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <MessageSquare size={20} /> 面談記録シートを開く (別タブ)
+                        [Message] 面談記録シートを開く (別タブ)
                     </a>
                 </div>
-
             </div>
 
-            {/* Modals & Tools */}
             <PasswordModal
                 isOpen={showPasswordModal}
                 onClose={() => setShowPasswordModal(false)}
@@ -450,9 +419,9 @@ export const SheetPage: React.FC<SheetPageProps> = ({ currentId, onBack, initial
 
             <button
                 onClick={scrollToTop}
-                className="fixed bottom-6 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors z-40 no-print opacity-80 print:hidden"
+                className="fixed bottom-6 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors z-40 no-print opacity-80 print:hidden font-bold"
             >
-                <ArrowUp size={20} />
+                [Top]
             </button>
         </div>
     );

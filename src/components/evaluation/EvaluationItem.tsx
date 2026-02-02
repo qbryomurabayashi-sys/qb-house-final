@@ -1,3 +1,4 @@
+import React from 'react';
 import { EvaluationItem as EvaluationItemType, IMPROVEMENT_OPTS, CLAIM_DEDUCTIONS } from '../../data/constants';
 import { Select } from '@/components/ui/Select';
 // Assuming Select is a compatible drop-in or I need to adapt. 
@@ -7,7 +8,7 @@ import { Select } from '@/components/ui/Select';
 // Let's implement the simpler parts first.
 
 import { generateUUID } from '../../utils/evaluationUtils';
-import { MessageSquare, AlertTriangle, Check, BookOpen, AlertCircle, X } from 'lucide-react';
+// import { MessageSquare, AlertTriangle, Check, BookOpen, AlertCircle, X } from 'lucide-react';
 
 interface EvaluationItemProps {
     item: EvaluationItemType;
@@ -86,7 +87,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                     {/* Point Description / Hover Help */}
                     {item.pointDesc && (
                         <div className="mt-2 pl-8 text-xs text-blue-600 flex items-start gap-1">
-                            <BookOpen size={12} className="mt-0.5 shrink-0" />
+                            <span className="mt-0.5 shrink-0 font-bold">[?]</span>
                             <span>{item.pointDesc}</span>
                         </div>
                     )}
@@ -117,8 +118,8 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                         {(item.incidents || []).map((inc, idx) => (
                             <div key={inc.id} className="p-3 bg-red-50 rounded border border-red-100 relative">
                                 {!readOnly && (
-                                    <button onClick={() => removeIncident(inc.id)} className="absolute top-2 right-2 text-red-400 hover:text-red-600">
-                                        <X size={16} />
+                                    <button onClick={() => removeIncident(inc.id)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold">
+                                        [X]
                                     </button>
                                 )}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
@@ -188,7 +189,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                                 onClick={addIncident}
                                 className="w-full py-2 bg-red-100 text-red-700 font-bold rounded hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm"
                             >
-                                <AlertTriangle size={16} /> 事案を追加
+                                <span>[!]</span> 事案を追加
                             </button>
                         )}
                     </div>
@@ -250,7 +251,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
                         className="w-full p-3 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition-all resize-y min-h-[60px]"
                         disabled={readOnly}
                     />
-                    <MessageSquare className="absolute bottom-3 right-3 text-gray-300 pointer-events-none" size={16} />
+                    {/* <MessageSquare className="absolute bottom-3 right-3 text-gray-300 pointer-events-none" size={16} /> */}
                 </div>
             </div>
         </div>

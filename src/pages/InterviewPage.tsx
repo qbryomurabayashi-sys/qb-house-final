@@ -1,7 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
-import {
-    Search, Plus, FileText, ArrowLeft, Trash2
-} from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -128,7 +125,7 @@ export default function InterviewPage({ onBack, context }: InterviewPageProps) {
             id: "actions", cell: ({ row }) => (
                 <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(row.original)}>詳細</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(row.original.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50"><Trash2 size={16} /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(row.original.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 font-bold">[Del]</Button>
                 </div>
             )
         }
@@ -144,14 +141,14 @@ export default function InterviewPage({ onBack, context }: InterviewPageProps) {
             <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-500 hover:text-slate-900">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> 評価へ戻る
+                        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-500 hover:text-slate-900 font-bold">
+                            [Back] 評価へ戻る
                         </Button>
-                        <div className="flex items-center gap-2 text-slate-900 font-bold text-lg"><FileText className="text-slate-900" /> 面談報告書アプリ</div>
+                        <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">[File] 面談報告書アプリ</div>
                     </div>
                     <div className="flex gap-4">
-                        <div className="relative"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" /><Input className="pl-9 w-64 bg-slate-50 border-slate-200" placeholder="検索..." value={globalFilter} onChange={e => setGlobalFilter(e.target.value)} /></div>
-                        <Button onClick={handleCreate}><Plus className="mr-2 h-4 w-4" /> 新規作成</Button>
+                        <div className="relative"><span className="absolute left-2.5 top-2.5 text-xs text-slate-400">[Search]</span><Input className="pl-9 w-64 bg-slate-50 border-slate-200" placeholder="検索..." value={globalFilter} onChange={e => setGlobalFilter(e.target.value)} /></div>
+                        <Button onClick={handleCreate}>[Plus] 新規作成</Button>
                     </div>
                 </div>
             </header>
