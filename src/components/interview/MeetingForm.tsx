@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { generateUUID } from "@/utils/evaluationUtils";
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -72,7 +73,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({ initialData, isOpen, o
     }, [isOpen, initialData, reset]);
 
     const onSubmit = (data: MeetingRecord) => {
-        onSave({ ...data, id: initialData?.id || crypto.randomUUID() });
+        onSave({ ...data, id: initialData?.id || generateUUID() });
         onClose();
     };
 

@@ -6,7 +6,8 @@ import { Select } from '@/components/ui/Select';
 // Actually, for the incidents/claim logic, it is complex.
 // Let's implement the simpler parts first.
 
-import { MessageSquare, AlertTriangle, Check, BookOpen, AlertCircle } from 'lucide-react';
+import { generateUUID } from '../../utils/evaluationUtils';
+import { MessageSquare, AlertTriangle, Check, BookOpen, AlertCircle, X } from 'lucide-react';
 
 interface EvaluationItemProps {
     item: EvaluationItemType;
@@ -38,7 +39,7 @@ export const EvaluationItem: React.FC<EvaluationItemProps> = ({
 
     // Incident handlers
     const addIncident = () => {
-        const newIncidents = [...(item.incidents || []), { id: crypto.randomUUID(), date: new Date().toISOString().split('T')[0], desc: '', deduction: 0, improvement: 0 }];
+        const newIncidents = [...(item.incidents || []), { id: generateUUID(), date: new Date().toISOString().split('T')[0], desc: '', deduction: 0, improvement: 0 }];
         onUpdateIncidents(newIncidents);
     };
 

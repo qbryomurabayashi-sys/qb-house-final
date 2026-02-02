@@ -2,21 +2,41 @@ export const calculatePerformanceMetrics = (monthlyCuts: number[], excludedFromA
     const safeCuts = monthlyCuts || new Array(12).fill(0);
     const safeExcluded = excludedFromAverage || new Array(12).fill(false);
 
-    // 1. Current Total (Sum of ALL inputs, regardless of exclusion)
-    const currentTotal = safeCuts.reduce((a, b) => a + (b || 0), 0);
+    // Calculate Average (excluding flagged months)
+    let total = 0;
+    let count = 0;
+    safeCuts.forEach((val, idx) => {
+        if (!safeExcluded[idx]) {
+            total += val;
+            count++;
+        }
+    });
+    const average = count > 0 ? Math.round(total / count) : 0;
 
-    // 2. Average Calculation (Inputs > 0 AND Not Excluded)
-    const validMonths = safeCuts.map((v, i) => ({ v, i }))
-        .filter(item => item.v > 0 && !safeExcluded[item.i]);
+    // Calculate Predicted Total
+    let predictedTotal = 0;
+    let emptyCount = 0;
 
-    const validSum = validMonths.reduce((a, item) => a + item.v, 0);
-    const validCount = validMonths.length;
-    const average = validCount > 0 ? Math.round(validSum / validCount) : 0;
+    safeCuts.forEach((val, idx) => {
+        if (val > 0) {
+            predictedTotal += val;
+        } else {
+            // Use average for future/empty months
+            predictedTotal += average;
+            emptyCount++;
+        }
+    });
 
-    // 3. Yearly Forecast
-    // Fill '0' months with 'average'.
-    const emptyCount = safeCuts.filter(v => v === 0).length;
-    const predictedTotal = currentTotal + (average * emptyCount);
+    // Current Raw Total
+    const currentTotal = safeCuts.reduce((a, b) => a + b, 0);
 
     return { currentTotal, average, predictedTotal, emptyCount };
+};
+
+export const generateUUID = () => {
+    // Simple fallback to avoid any crypto/secure context issues
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { generateUUID } from './utils/evaluationUtils';
 import { TopPage } from './pages/TopPage';
 import { MenuPage } from './pages/MenuPage';
 import { SheetPage } from './pages/SheetPage';
@@ -88,7 +89,7 @@ function App() {
 
     const handleCreateNew = () => {
         // Start completely new
-        const newId = crypto.randomUUID();
+        const newId = generateUUID();
         setCurrentSheetId(newId);
         setSheetInitialData(null); // Will default to empty in SheetPage
         setViewMode('sheet');
@@ -131,7 +132,7 @@ function App() {
         // Create new ID but pre-fill name/store info?
         // SheetPage takes initialData. 
         // We can pass partial initialData (metadata only)
-        const newId = crypto.randomUUID();
+        const newId = generateUUID();
         setCurrentSheetId(newId);
         setSheetInitialData({
             items: undefined, // default
